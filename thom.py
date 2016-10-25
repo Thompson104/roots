@@ -4,79 +4,20 @@ from sympy import *
 
 Res = resultant
 
+def lcof ( P ) :
+    return LC( P )
+
+def cof ( j , P ) :
+
+    if j < 0 or j > P.degree() :
+        raise Exception( 'index {} out of range for {}'.format( j , P ) )
+
+    return P.all_coeffs()[-j-1]
+
 def Rem ( P , Q ) :
     # print( 'Rem' , P , Q )
     return rem( P , Q , auto = False )
 
-def SSD ( P , Q ) :
-
-    """
-        Signed Subresultant Polynomials.
-    """
-
-    # print( 'SSD' , P , Q )
-
-    p = P.degree()
-    q = Q.degree()
-
-    if p <= q :
-        raise Exception( 'P must have strictly larger degree than Q. Got p = {}, q = {}.'.format( p , q ) )
-
-    sResP = [ None ] * ( p + 1 )
-    s = [ None ] * ( p + 1 )
-    t = [ None ] * ( p + 1 )
-
-    sResP[p] = P
-    s[p] = t[p] = 1
-    sResP[p-1] = Q
-    bq = Q.coeffs()[0]
-    t[p-1] = bq
-    sResP[q] = eps(p-q) * bq**(p-q-1) * Q
-    s[q] = eps(p-q) * bq**(p-q)
-
-    for l in range( q + 1 , p - 1 ) :
-        sResP[l] = s[l] = 0
-
-    i = p + 1
-    j = p
-
-    while sResP[j-1] != 0 :
-
-        k = sResP[j-1].degree()
-
-        if k < 1 :
-            break
-
-        if k == j - 1 :
-
-            s[j-1] = t[j-1]
-            sResP[k-1] = -Rem( sResP[i-1].mul_ground(s[j-1]**2) , sResP[j-1] ).div( s[j] * t[i-1] )[0]
-
-        elif k < j - 1 :
-            s[j-1] = 0
-
-            for d in range ( 1 , j - k ) :
-
-                t[j-d-1] = (-1)**d * (t[j-1]*t[j-d]) / s[j]
-
-            s[k] = t[k]
-            sResP[k] = sResP[j-1].mul_ground(s[k]/t[j-1])
-
-            # typo in book, says k + 1 instead of k - 1
-            for l in range( j - 2 , k ) :
-                sResP[l] = s[l] = 0
-
-            sResP[k-1] = -Rem(sResP[i-1].mul_ground(t[j-1]*s[k]),sResP[j-1]).div(s[j] * t[i-1])[0]
-
-        t[k-1] = sResP[k-1].coeffs()[0]
-
-        i = j
-        j = k
-
-    for l in range( 0 , j - 1 ) :
-        sResP[l] = s[l] = 0
-
-    return tuple( sResP )
 
 def ub ( P ) :
     a = P.coeffs()
@@ -196,11 +137,99 @@ def _PmV ( s ) :
 
         return _PmV( r )
 
+
+def SSP ( P , Q ) :
+
+    """
+        Algorithm 8.76 (Signed Subresultant Polynomials).
+    """
+
+    # print( 'SSP' , P , Q )
+
+    p = P.degree()
+    q = Q.degree()
+
+    if p <= q :
+        raise Exception( 'P must have strictly larger degree than Q. Got p = {}, q = {}.'.format( p , q ) )
+
+    sResP = [ None ] * ( p + 1 )
+    s = [ None ] * ( p + 1 )
+    t = [ None ] * ( p + 1 )
+
+    sResP[p] = P
+    s[p] = t[p] = 1
+    sResP[p-1] = Q
+    bq = Q.coeffs()[0]
+    t[p-1] = bq
+    sResP[q] = eps(p-q) * bq**(p-q-1) * Q
+    s[q] = eps(p-q) * bq**(p-q)
+
+    for l in range( q + 1 , p - 1 ) :
+        sResP[l] = s[l] = 0
+
+    i = p + 1
+    j = p
+
+    while sResP[j-1] != 0 :
+
+        k = sResP[j-1].degree()
+
+        if k < 1 :
+            break
+
+        if k == j - 1 :
+
+            s[j-1] = t[j-1]
+            sResP[k-1] = -Rem( sResP[i-1].mul_ground(s[j-1]**2) , sResP[j-1] ).div( s[j] * t[i-1] )[0]
+
+        elif k < j - 1 :
+            s[j-1] = 0
+
+            for d in range ( 1 , j - k ) :
+
+                t[j-d-1] = (-1)**d * (t[j-1]*t[j-d]) / s[j]
+
+            s[k] = t[k]
+            sResP[k] = sResP[j-1].mul_ground(s[k]/t[j-1])
+
+            # typo in book, says k + 1 instead of k - 1
+            for l in range( j - 2 , k ) :
+                sResP[l] = s[l] = 0
+
+            sResP[k-1] = -Rem(sResP[i-1].mul_ground(t[j-1]*s[k]),sResP[j-1]).div(s[j] * t[i-1])[0]
+
+        t[k-1] = sResP[k-1].coeffs()[0]
+
+        i = j
+        j = k
+
+    for l in range( 0 , j - 1 ) :
+        sResP[l] = s[l] = 0
+
+    return tuple( sResP )
+
+def SSC ( P , Q ) :
+    """
+        Algorithm 8.77 (Signed Subresultant Coefficients).
+    """
+    sResP = SSP( P , Q )
+    sRes = tuple( cof( i , sResPi ) for (i, sResPi) in enumerate( sResP ) )
+    return sRes
+
 def UTQ ( Q , P ) :
 
     """
         Univariate Tarski-Query
     """
+
+    if P == 0 :
+
+        raise Exception( 'P must be nonzero, got {}'.format( P ) )
+
+    # if Q == 0 :
+
+        # raise Exception( 'Q must be nonzero, got {}'.format( Q ) )
+
 
     q = Q.degree()
 
@@ -271,7 +300,7 @@ if __name__ == '__main__' :
 
     f = 9*x**13 - 18*x**11 - 33*x**10 + 102*x**8 + 7*x**7 - 36*x**6 - 122*x**5 + 49*x**4 + 93*x**3 - 42*x**2 - 18*x + 9
     P = Poly( f , x , domain=QQ)
-    t = tuple( map( LC , tuple( reversed( SSD(P,P.diff()) ) )[:9] ) )
+    t = tuple( map( lcof , tuple( reversed( SSP(P,P.diff()) ) )[:9] ) )
     e = ( 9, 117, 37908, -72098829, -666229317948, -1663522740400320,
     -2181968897553243072, -151645911413926622112,
     -165117711302736225120 )
@@ -280,7 +309,7 @@ if __name__ == '__main__' :
 
     f = x**4 + a*x**2 + b*x + c
     P = Poly( f , x , domain=QQ[a,b,c] )
-    t = tuple( reversed( SSD( P , P.diff()) ) )
+    t = tuple( reversed( SSP( P , P.diff()) ) )
 
     e = ( Poly(x**4 + a*x**2 + b*x + c, x, domain=QQ[a,b,c]),
     Poly(4*x**3 + 2*a*x + b, x, domain=QQ[a,b,c]),
@@ -293,7 +322,7 @@ if __name__ == '__main__' :
 
     f = x**4 + a*x**2 + b*x + c
     P = Poly( f , x , domain=QQ[a,b,c] )
-    t = SSD( P , P.diff().diff())
+    t = SSP( P , P.diff().diff())
     e = (Poly(400*a**4 - 5760*a**2*c + 3456*a*b**2 + 20736*c**2, x, domain=QQ[a,b,c]),
         Poly(1728*b*x - 240*a**2 + 1728*c, x, domain=QQ[a,b,c]),
         Poly(-144*x**2 - 24*a, x, domain=QQ[a,b,c]),
