@@ -114,11 +114,9 @@ def eps ( i ) :
 
 def PmV ( s ) :
 
-    _s = tuple( reversed( s ) )
-
-    return _Pmv( _s )
-
-def _PmV ( s ) :
+    """
+        Notation 4.30 (Generalized Permanences minus Variations).
+    """
 
     p = len( s ) - 1
 
@@ -137,11 +135,11 @@ def _PmV ( s ) :
 
     if p - q % 2 == 1 :
 
-        return _PmV( r ) + eps( p - q ) * sign( s[p] * s[q] )
+        return PmV( r ) + eps( p - q ) * sign( s[p] * s[q] )
 
     else :
 
-        return _PmV( r )
+        return PmV( r )
 
 
 def SSP ( P , Q ) :
@@ -165,7 +163,7 @@ def SSP ( P , Q ) :
     sResP[p] = P
     s[p] = t[p] = 1
     sResP[p-1] = Q
-    bq = Q.coeffs()[0]
+    bq = cof( q , Q )
     t[p-1] = bq
     sResP[q] = eps(p-q) * bq**(p-q-1) * Q
     s[q] = eps(p-q) * bq**(p-q)
@@ -204,7 +202,7 @@ def SSP ( P , Q ) :
 
             sResP[k-1] = -Rem(sResP[i-1].mul_ground(t[j-1]*s[k]),sResP[j-1]).div(s[j] * t[i-1])[0]
 
-        t[k-1] = sResP[k-1].coeffs()[0]
+        t[k-1] = lcof( sResP[k-1] )
 
         i = j
         j = k
@@ -225,29 +223,58 @@ def SSC ( P , Q ) :
 def UTQ ( Q , P ) :
 
     """
-        Univariate Tarski-Query
+        Algorithm 9.7 (Univariate Tarski-Query).
     """
 
     if P == 0 :
 
         raise Exception( 'P must be nonzero, got {}'.format( P ) )
 
-    # if Q == 0 :
+    if Q == 0 :
 
-        # raise Exception( 'Q must be nonzero, got {}'.format( Q ) )
+        raise Exception( 'Q must be nonzero, got {}'.format( Q ) )
 
 
     q = Q.degree()
 
     if q == 0 :
 
-        b0 = Q.coeffs()[0]
+        b0 = cof( 0 , Q )
+
+        sRes = SSC( P , P.diff() )
+        _PmV = PmV( sRes )
+
+        return _PmV if b0 > 0 else -_PmV
+
+    elif q == 1 :
+
+        b1 = cof( 1 , Q )
+        b0 = cof( 0 , Q )
+
+        S = ( P.mul_ground( p * b1 ) - P.diff().mul(Q) ).mul( sign(b1) )
+
+        sRes = SSC( P , S )
+        _PmV = PmV( sRes )
+
+        return _PmV
+
+    else :
+
+        sRes = SSC( -P.diff().mul( Q ) , P )
+        _PmV = PmV( sRes )
+
+        if q - 1 % 2 == 1 :
+            bq = cof( q , Q )
+            return _PmV + sign(bq)
+
+        else:
+            return _PmV
 
 
 def SD ( Q , P , TaQ = None ) :
 
     """
-        Sign Determination
+        Algorithm 10.96 (Sign Determination).
     """
 
     if TaQ is None :
@@ -258,7 +285,7 @@ def SD ( Q , P , TaQ = None ) :
 def USD ( Q , P ) :
 
     """
-        Univariate Sign Determination
+        Algorithm 10.97 (Univariate Sign Determination).
     """
 
     return SD( Q , P , TaQ = UTQ )
@@ -266,6 +293,10 @@ def USD ( Q , P ) :
 
 
 def sort ( P , Q ) :
+
+    """
+        Algorithm 10.105 (Comparison of Roots in a Real Closed Field).
+    """
 
     if P == 0 :
 
@@ -275,8 +306,8 @@ def sort ( P , Q ) :
 
         raise Exception( 'Q must be nonzero, got {}'.format( Q ) )
 
-    a = USR( P , Der( P.diff() ) + Der( Q ) )
-    b = USR( Q , Der( Q.diff() ) + Der( P ) )
+    a = USD( P , Der( P.diff() ) + Der( Q ) )
+    b = USD( Q , Der( Q.diff() ) + Der( P ) )
 
     result = [ ]
 
