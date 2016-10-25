@@ -9,10 +9,16 @@ def lcof ( P ) :
 
 def cof ( j , P ) :
 
-    if j < 0 or j > P.degree() :
+    if j < 0 :
         raise Exception( 'index {} out of range for {}'.format( j , P ) )
 
-    return P.all_coeffs()[-j-1]
+    if type( P ) is int :
+
+        return P if j == 0 else 0
+
+    else :
+
+        return P.all_coeffs()[-j-1] if j <= P.degree() else 0
 
 def Rem ( P , Q ) :
     # print( 'Rem' , P , Q )
@@ -300,7 +306,7 @@ if __name__ == '__main__' :
 
     f = 9*x**13 - 18*x**11 - 33*x**10 + 102*x**8 + 7*x**7 - 36*x**6 - 122*x**5 + 49*x**4 + 93*x**3 - 42*x**2 - 18*x + 9
     P = Poly( f , x , domain=QQ)
-    t = tuple( map( lcof , tuple( reversed( SSP(P,P.diff()) ) )[:9] ) )
+    t = tuple( reversed( SSC(P,P.diff() ) ) )[:9]
     e = ( 9, 117, 37908, -72098829, -666229317948, -1663522740400320,
     -2181968897553243072, -151645911413926622112,
     -165117711302736225120 )
