@@ -60,7 +60,7 @@ def SSD ( P , Q ) :
                 t[j-d-1] = (-1)**d * (t[j-1]*t[j-d]) / s[j]
 
             s[k] = t[k]
-            sResP[k] = s[k] * sResP[j-1] / t[j-1]
+            sResP[k] = sResP[j-1].mul_ground(s[k]/t[j-1])
 
             # typo in book, says k + 1 instead of k - 1
             for l in range( j - 2 , k ) :
@@ -254,12 +254,6 @@ if __name__ == '__main__' :
 
     from sympy.abc import a, b, c, x
 
-    f = x**4 + a*x**2 + b*x + c
-    P = Poly( f , x , domain=QQ[a,b,c] )
-    t = SSD( P , P.diff().diff())
-
-    print( t )
-
     # TESTS
 
     f = x**2 - 1
@@ -296,3 +290,16 @@ if __name__ == '__main__' :
         256*c**3, x, domain=QQ[a,b,c]))
 
     assert( t == e )
+
+    f = x**4 + a*x**2 + b*x + c
+    P = Poly( f , x , domain=QQ[a,b,c] )
+    t = SSD( P , P.diff().diff())
+    e = (Poly(400*a**4 - 5760*a**2*c + 3456*a*b**2 + 20736*c**2, x, domain=QQ[a,b,c]),
+        Poly(1728*b*x - 240*a**2 + 1728*c, x, domain=QQ[a,b,c]),
+        Poly(-144*x**2 - 24*a, x, domain=QQ[a,b,c]),
+        Poly(12*x**2 + 2*a, x, domain=QQ[a,b,c]),
+        Poly(x**4 + a*x**2 + b*x + c, x, domain=QQ[a,b,c])
+    )
+
+    assert( t == e )
+
