@@ -251,6 +251,7 @@ def UTQ ( Q , P ) :
         b1 = cof( 1 , Q )
         b0 = cof( 0 , Q )
 
+        p = P.degree( )
         S = ( P.mul_ground( p * b1 ) - P.diff().mul(Q) ).mul( sign(b1) )
 
         sRes = SSC( P , S )
@@ -271,7 +272,16 @@ def UTQ ( Q , P ) :
             return _PmV
 
 
-def SD ( Q , P , TaQ = None ) :
+def A ( S , T ) :
+
+    T = tuple( T )
+
+    for s in S :
+        for t in T :
+            yield s + (t,)
+
+
+def SD ( Z , P , TaQ = None ) :
 
     """
         Algorithm 10.96 (Sign Determination).
@@ -280,7 +290,83 @@ def SD ( Q , P , TaQ = None ) :
     if TaQ is None :
         raise Exception( 'Missing Tarski-query black-box implementation' )
 
-    pass
+    if not P :
+        raise Exception( 'P must be non-empty, got {}.'.format( P ) )
+
+    s = len(P)
+
+    _symbols = P[0].free_symbols
+    _domain = P[0].domain
+
+    _1 = Poly( 1, *_symbols, domain=_domain )
+    r = TaQ( _1 , Z )
+
+    if r == 0 :
+        return ()
+
+    Sigma = [ None ] * ( s + 1 )
+    c     = [ None ] * ( s + 1 )
+    Comp  = [ None ] * ( s + 1 )
+    Ada   = [ None ] * ( s + 1 )
+    t     = [ None ] * ( s + 1 )
+    Mat   = [ None ] * ( s + 1 )
+
+    Sigma[0] = ((),)
+    c[0] = (r,)
+    Comp[0] = ()
+    Ada[0] = ((),)
+    t[0] = (r,)
+    Mat[0] = (1,)
+
+    for i , Pi in enumerate( P , 1 ) :
+
+        l = TaQ( Pi , Z )
+        s = TaQ( Pi**2 , Z )
+        # Solve the constant-size linear system
+        #
+        #  / 1  1  1 \   / c( Pi = 0 , Z ) \     / TaQ( Pi**0 , Z ) \
+        # |  0  1 -1  | |  c( Pi > 0 , Z )  | = |  TaQ( Pi**1 , Z ) |
+        #  \ 0  1  1 /   \ c( Pi < 0 , Z ) /     \ TaQ( Pi**2 , Z ) /
+        #
+
+        eq = r - s
+        gt = ( l + s ) / 2
+        lt = ( s - l ) / 2
+
+        _SIGNPiZ = []
+
+        if eq :
+            _SIGNPiZ.append(0)
+        if gt :
+            _SIGNPiZ.append(1)
+        if lt :
+            _SIGNPiZ.append(-1)
+
+        rPi = len( _SIGNPiZ )
+        SIGNPiZ = tuple( _SIGNPiZ )
+
+        if rPi == 1 :
+
+            Sigma[i] = tuple( A( Sigma[i-1] , _SIGNPiZ ) )
+            c[i] = c[i-1]
+            Comp[i] = Comp[i-1]
+            Ada[i] = Ada[i-1]
+            t[i] = t[i-1]
+            Mat[i] = Mat[i-1]
+
+        else :
+
+            # complex case :(
+
+            Sigma_ = tuple( A( ( Sigma[i-1][j] for j in Comp[i-1] ) , _SIGNPiZ ) )
+            AdaSigma_ = tuple( A( Ada[i-1] , range( len( _SIGNPiZ ) ) ) )
+
+            # MAGIC HAPPENS
+
+            print( Sigma_ )
+            print( AdaSigma_ )
+
+    return r
 
 def USD ( Q , P ) :
 
@@ -369,3 +455,11 @@ if __name__ == '__main__' :
 
     assert( t == e )
 
+    # SANDBOX
+
+    f = (x-1)*(x-3)
+    g = (x-2)
+    P = Poly( f , x , domain=QQ)
+    Q = Poly( g , x , domain=QQ)
+    interleaving = sort( P , Q )
+    print( interleaving  )
