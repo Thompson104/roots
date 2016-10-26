@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import itertools
 from sympy import *
 
 Res = resultant
@@ -291,11 +292,76 @@ def X ( S , T ) :
 
     return tuple( zip( *[ s + (t,) for s in zip(*S) for t in T ] ) )
 
-
-def SD ( Z , P , TaQ = None ) :
+def T ( M1 , n1 , m1 , M2 , n2 , m2 ) :
 
     """
-        Algorithm 10.96 (Sign Determination).
+        Notation 2.83 (Modified Tensor Product)
+    """
+
+    n = n1*n2
+    m = m1*m2
+
+    M = [ [ None for j in range( m ) ] for i in range( n ) ]
+
+    for i1 in range( n1 ) :
+        for j1 in range( m1 ) :
+            for i2 in range( n2 ) :
+                for j2 in range( m2 ) :
+                    M[n1*i2+i1][m2*j1+j2] = M1[i1][j1] * M2[i2][j2]
+
+    return M
+
+def TMS ( s ) :
+
+    """
+        Notation 2.86 (Total matrix of signs).
+    """
+
+    if s < 1 :
+        raise Exception( "s must be positive, got {}".format(s) )
+
+    M1 = (
+        (  1 ,  1 ,  1 ) ,
+        (  0 ,  1 , -1 ) ,
+        (  0 ,  1 ,  1 ) ,
+    )
+
+    if s == 1 :
+
+        return M1
+
+    else :
+
+        return T( TMS(s-1) , 3**(s-1) , 3**(s-1) , M1 , 3 , 3 )
+
+
+
+def NSD ( Z , P , TaQ = None ) :
+
+    """
+        Algorithm 10.72 (Naive Sign Determination).
+    """
+
+    if TaQ is None :
+        raise Exception( 'Missing Tarski-query black-box implementation' )
+
+    if not P :
+        raise Exception( 'P must be non-empty, got {}.'.format( P ) )
+
+    s = len(P)
+
+    Ms = TMS( s )
+
+    Sigma = tuple( itertools.product( (0,1,-1) , repeat = s ) )
+
+    print( Ms )
+    print( Sigma )
+
+
+def BSD ( Z , P , TaQ = None ) :
+
+    """
+        Algorithm 10.96 (Better Sign Determination).
     """
 
     if TaQ is None :
@@ -385,7 +451,7 @@ def USD ( Q , P ) :
         Algorithm 10.97 (Univariate Sign Determination).
     """
 
-    return SD( Q , P , TaQ = UTQ )
+    return NSD( Q , P , TaQ = UTQ )
 
 
 
@@ -466,7 +532,35 @@ if __name__ == '__main__' :
 
     assert( t == e )
 
+    # TMS(2) =
+    # 1  1  1  1  1  1  1  1  1
+    # 0  0  0  1  1  1 -1 -1 -1
+    # 0  0  0  1  1  1  1  1  1
+    # 0  1 -1  0  1 -1  0  1 -1
+    # 0  0  0  0  1 -1  0 -1  1
+    # 0  0  0  0  1 -1  0  1 -1
+    # 0  1  1  0  1  1  0  1  1
+    # 0  0  0  0  1  1  0 -1 -1
+    # 0  0  0  0  1  1  0  1  1
+
+    t = TMS(2)
+    e = [
+        [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 1, 1, 1, -1, -1, -1],
+        [0, 0, 0, 1, 1, 1, 1, 1, 1],
+        [0, 1, -1, 0, 1, -1, 0, 1, -1],
+        [0, 0, 0, 0, 1, -1, 0, -1, 1],
+        [0, 0, 0, 0, 1, -1, 0, 1, -1],
+        [0, 1, 1, 0, 1, 1, 0, 1, 1],
+        [0, 0, 0, 0, 1, 1, 0, -1, -1],
+        [0, 0, 0, 0, 1, 1, 0, 1, 1]
+    ]
+    assert( t == e )
+
     # SANDBOX
+
+    def pretty ( M ) :
+        print( *map( lambda x : " ".join( ( "{:2d}" , ) * len( x ) ).format( *x ) , M) , sep = '\n')
 
     f = (x-1)*(x-3)
     g = (x-2)
@@ -474,3 +568,4 @@ if __name__ == '__main__' :
     Q = Poly( g , x , domain=QQ)
     interleaving = sort( P , Q )
     print( interleaving  )
+
