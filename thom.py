@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
 
 import itertools
+import functools
 from sympy import *
 
 Res = resultant
 
 def lcof ( P ) :
     return LC( P )
+
+def deg ( P ) :
+
+    if type( P ) is int :
+        return 0
+
+    return max( 0 , P.degree() )
 
 def cof ( j , P ) :
 
@@ -35,7 +43,11 @@ def lb ( P ) :
     return -ub( P )
 
 
-def compare ( s , r ) :
+def Thom_encoding ( s , r ) :
+
+    """
+        Proposition 2.37 (Thom encoding).
+    """
 
     d = len( s )
 
@@ -151,8 +163,8 @@ def SSP ( P , Q ) :
 
     # print( 'SSP' , P , Q )
 
-    p = P.degree()
-    q = Q.degree()
+    p = deg( P )
+    q = deg( Q )
 
     if p <= q :
         raise Exception( 'P must have strictly larger degree than Q. Got p = {}, q = {}.'.format( p , q ) )
@@ -236,7 +248,7 @@ def UTQ ( Q , P ) :
         raise Exception( 'Q must be nonzero, got {}'.format( Q ) )
 
 
-    q = Q.degree()
+    q = deg( Q )
 
     if q == 0 :
 
@@ -252,7 +264,7 @@ def UTQ ( Q , P ) :
         b1 = cof( 1 , Q )
         b0 = cof( 0 , Q )
 
-        p = P.degree( )
+        p = deg( P )
         S = ( P.mul_ground( p * b1 ) - P.diff().mul(Q) ).mul( sign(b1) )
 
         sRes = SSC( P , S )
@@ -351,11 +363,27 @@ def NSD ( Z , P , TaQ = None ) :
     s = len(P)
 
     Ms = TMS( s )
-
     Sigma = tuple( itertools.product( (0,1,-1) , repeat = s ) )
+    A = tuple( itertools.product( (0,1,2) , repeat = s ) )
 
-    print( Ms )
-    print( Sigma )
+    # print( Ms )
+    # print( Sigma )
+    # print( A )
+
+    TaQ_PA_Z = [ ]
+    for a in A :
+        t = TaQ( prod( P[i]**a[i] for i in range( s ) ), Z )
+        TaQ_PA_Z.append( t )
+
+    # print( TaQ_PA_Z )
+    symb = [ Symbol("".join(map(str,s))) for s in Sigma ]
+
+    solutions = linsolve ( ( Matrix( Ms ) , Matrix( TaQ_PA_Z ) ) , symb )
+    c_SZ = next(iter(solutions))
+
+    # the >= 1 should be a != 0, weird :S
+    # should not be reversed
+    return tuple( map( tuple , map( reversed ,itertools.compress( Sigma , map( lambda x : x >= 1 , c_SZ ) ) ) ) )
 
 
 def BSD ( Z , P , TaQ = None ) :
@@ -469,14 +497,23 @@ def sort ( P , Q ) :
 
         raise Exception( 'Q must be nonzero, got {}'.format( Q ) )
 
+    # should work with this simpler implementation ??
+    # a = USD( P , Der( Q ) )
+    # b = USD( Q , Der( Q ) )
     a = USD( P , Der( P.diff() ) + Der( Q ) )
     b = USD( Q , Der( Q.diff() ) + Der( P ) )
 
-    result = [ ]
+    key = functools.cmp_to_key( Thom_encoding )
 
-    # magic
+    return a , b , sorted( a + b , key = key )
 
-    return result
+def interleaving ( P , Q ) :
+
+    a , b , s = sort( P , Q )
+
+    b = frozenset(b)
+
+    return tuple( int( x in b ) for x in s )
 
 
 if __name__ == '__main__' :
@@ -566,6 +603,6 @@ if __name__ == '__main__' :
     g = (x-2)
     P = Poly( f , x , domain=QQ)
     Q = Poly( g , x , domain=QQ)
-    interleaving = sort( P , Q )
-    print( interleaving  )
+    i = interleaving( P , Q )
+    print( i )
 
