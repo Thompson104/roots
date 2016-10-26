@@ -280,6 +280,17 @@ def A ( S , T ) :
         for t in T :
             yield s + (t,)
 
+def X ( S , T ) :
+
+    T = tuple( T )
+
+    if not S[0] :
+        return ( T, )
+
+    # transpose the transpose
+
+    return tuple( zip( *[ s + (t,) for s in zip(*S) for t in T ] ) )
+
 
 def SD ( Z , P , TaQ = None ) :
 
@@ -359,7 +370,7 @@ def SD ( Z , P , TaQ = None ) :
             # complex case :(
 
             Sigma_ = tuple( A( ( Sigma[i-1][j] for j in Comp[i-1] ) , _SIGNPiZ ) )
-            AdaSigma_ = tuple( A( Ada[i-1] , range( len( _SIGNPiZ ) ) ) )
+            AdaSigma_ = X( Ada[i-1] , range( len( _SIGNPiZ ) ) )
 
             # MAGIC HAPPENS
 
