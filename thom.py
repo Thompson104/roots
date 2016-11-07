@@ -13,6 +13,8 @@ from sympy import resultant
 from sympy import LC
 from sympy import ZZ, QQ
 
+def pretty(M):
+    print(*map(lambda x: " ".join(("{:2d}", ) * len(x)).format(*x), M), sep='\n')
 
 def Res(P, Q, *gens, **args):
     """
@@ -229,6 +231,13 @@ def Zer(P):
 
 def eps(i):
 
+    """
+
+        >>> tuple(map(eps, range(1, 11)))
+        (1, -1, -1, 1, 1, -1, -1, 1, 1, -1)
+
+    """
+
     if i < 1:
         raise Exception('i must be greater or equal to 1, got {}'.format(i))
 
@@ -276,6 +285,27 @@ def PmV(s):
 def SSP(P, Q):
     """
         Algorithm 8.76 (Signed Subresultant Polynomials).
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import a, b, c, x
+        >>> f = x**4 + a * x**2 + b * x + c
+        >>> P = Poly(f, x, domain=QQ[a, b, c])
+        >>> tuple(reversed(SSP(P, P.diff())))
+        (Poly(x**4 + a*x**2 + b*x + c, x, domain='QQ[a,b,c]'), \
+Poly(4*x**3 + 2*a*x + b, x, domain='QQ[a,b,c]'), \
+Poly(-8*a*x**2 - 12*b*x - 16*c, x, domain='QQ[a,b,c]'), \
+Poly((-8*a**3 + 32*a*c - 36*b**2)*x - 4*a**2*b - 48*b*c, x, domain='QQ[a,b,c]'), \
+Poly(16*a**4*c - 4*a**3*b**2 - 128*a**2*c**2 + 144*a*b**2*c - 27*b**4 + 256*c**3, x, domain='QQ[a,b,c]'))
+
+        >>> f = x**4 + a * x**2 + b * x + c
+        >>> P = Poly(f, x, domain=QQ[a, b, c])
+        >>> SSP(P, P.diff().diff())
+        (Poly(400*a**4 - 5760*a**2*c + 3456*a*b**2 + 20736*c**2, x, domain='QQ[a,b,c]'), \
+Poly(1728*b*x - 240*a**2 + 1728*c, x, domain='QQ[a,b,c]'), \
+Poly(-144*x**2 - 24*a, x, domain='QQ[a,b,c]'), \
+Poly(12*x**2 + 2*a, x, domain='QQ[a,b,c]'), \
+Poly(x**4 + a*x**2 + b*x + c, x, domain='QQ[a,b,c]'))
+
     """
 
     # print( 'SSP' , P , Q )
@@ -350,6 +380,17 @@ def SSP(P, Q):
 def SSC(P, Q):
     """
         Algorithm 8.77 (Signed Subresultant Coefficients).
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> f = 9 * x**13 - 18 * x**11 - 33 * x**10 + 102 * x**8 + 7 * x**7 \
+- 36 * x**6 - 122 * x**5 + 49 * x**4 + 93 * x**3 - 42 * x**2 - 18 * x + 9
+        >>> P = Poly(f, x, domain=QQ)
+        >>> tuple(reversed(SSC(P, P.diff())))[:9]
+        (9, 117, 37908, -72098829, -666229317948, -1663522740400320, \
+-2181968897553243072, -151645911413926622112, \
+-165117711302736225120)
+
     """
     sResP = SSP(P, Q)
     sRes = tuple(cof(i, sResPi) for (i, sResPi) in enumerate(sResP))
@@ -449,6 +490,22 @@ def T(M1, n1, m1, M2, n2, m2):
 def TMS(s):
     """
         Notation 2.86 (Total matrix of signs).
+
+        >>> pretty(TMS(1))
+         1  1  1
+         0  1 -1
+         0  1  1
+        >>> pretty(TMS(2))
+         1  1  1  1  1  1  1  1  1
+         0  0  0  1  1  1 -1 -1 -1
+         0  0  0  1  1  1  1  1  1
+         0  1 -1  0  1 -1  0  1 -1
+         0  0  0  0  1 -1  0 -1  1
+         0  0  0  0  1 -1  0  1 -1
+         0  1  1  0  1  1  0  1  1
+         0  0  0  0  1  1  0 -1 -1
+         0  0  0  0  1  1  0  1  1
+
     """
 
     if s < 1:
@@ -638,107 +695,6 @@ def interleaving(P, Q):
 if __name__ == '__main__':
 
     from sympy.abc import a, b, c, x
-
-    # TESTS
-
-    t = tuple(map(eps, range(1, 11)))
-
-    assert(t == (1, -1, -1, 1, 1, -1, -1, 1, 1, -1))
-
-    f = 9 * x**13 - 18 * x**11 - 33 * x**10 + 102 * x**8 + 7 * x**7 - 36 * \
-        x**6 - 122 * x**5 + 49 * x**4 + 93 * x**3 - 42 * x**2 - 18 * x + 9
-    P = Poly(f, x, domain=QQ)
-    t = tuple(reversed(SSC(P, P.diff())))[:9]
-    e = (9, 117, 37908, -72098829, -666229317948, -1663522740400320,
-         -2181968897553243072, -151645911413926622112,
-         -165117711302736225120)
-    assert(t == e)
-
-    f = x**4 + a * x**2 + b * x + c
-    P = Poly(f, x, domain=QQ[a, b, c])
-    t = tuple(reversed(SSP(P, P.diff())))
-
-    e = (Poly(x**4 + a * x**2 + b * x + c, x, domain=QQ[a, b, c]),
-         Poly(4 * x**3 + 2 * a * x + b, x, domain=QQ[a, b, c]),
-         Poly(-8 * a * x**2 - 12 * b * x - 16 * c, x, domain=QQ[a, b, c]),
-         Poly((-8 * a**3 + 32 * a * c - 36 * b**2) * x - 4 * a**2 * b - 48 * b * c, x, domain=QQ[a, b, c]),
-         Poly(16 * a**4 * c - 4 * a**3 * b**2 - 128 * a**2 * c**2 + 144 * a * b**2 * c - 27 * b**4 +
-              256 * c**3, x, domain=QQ[a, b, c]))
-
-    assert(t == e)
-
-    f = x**4 + a * x**2 + b * x + c
-    P = Poly(f, x, domain=QQ[a, b, c])
-    t = SSP(P, P.diff().diff())
-    e = (
-        Poly(
-            400 * a**4 - 5760 * a**2 * c + 3456 * a * b**2 + 20736 * c**2,
-            x,
-            domain=QQ[
-                a,
-                b,
-                c]),
-        Poly(
-            1728 * b * x - 240 * a**2 + 1728 * c,
-            x,
-            domain=QQ[
-                a,
-                b,
-                c]),
-        Poly(
-            -144 * x**2 - 24 * a,
-            x,
-            domain=QQ[
-                a,
-                b,
-                c]),
-        Poly(
-            12 * x**2 + 2 * a,
-            x,
-            domain=QQ[
-                a,
-                b,
-                c]),
-        Poly(
-            x**4 + a * x**2 + b * x + c,
-            x,
-            domain=QQ[
-                a,
-                b,
-                c]))
-
-    assert(t == e)
-
-    # TMS(2) =
-    # 1  1  1  1  1  1  1  1  1
-    # 0  0  0  1  1  1 -1 -1 -1
-    # 0  0  0  1  1  1  1  1  1
-    # 0  1 -1  0  1 -1  0  1 -1
-    # 0  0  0  0  1 -1  0 -1  1
-    # 0  0  0  0  1 -1  0  1 -1
-    # 0  1  1  0  1  1  0  1  1
-    # 0  0  0  0  1  1  0 -1 -1
-    # 0  0  0  0  1  1  0  1  1
-
-    t = TMS(2)
-    e = [
-        [1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [0, 0, 0, 1, 1, 1, -1, -1, -1],
-        [0, 0, 0, 1, 1, 1, 1, 1, 1],
-        [0, 1, -1, 0, 1, -1, 0, 1, -1],
-        [0, 0, 0, 0, 1, -1, 0, -1, 1],
-        [0, 0, 0, 0, 1, -1, 0, 1, -1],
-        [0, 1, 1, 0, 1, 1, 0, 1, 1],
-        [0, 0, 0, 0, 1, 1, 0, -1, -1],
-        [0, 0, 0, 0, 1, 1, 0, 1, 1]
-    ]
-    assert(t == e)
-
-    # SANDBOX
-
-    def pretty(M):
-        print(
-            *map(lambda x: " ".join(("{:2d}", ) * len(x)).format(*x), M), sep='\n')
 
     f = (x - 1) * (x - 3)
     g = (x - 2)
