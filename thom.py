@@ -126,7 +126,18 @@ def cof(j, P):
 
 
 def Rem(P, Q):
-    # print( 'Rem' , P , Q )
+
+    """
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> P=Poly( x**3 - 2*x**2 - 4 , domain=QQ )
+        >>> Q=Poly( x - 3 , domain = QQ )
+        >>> rem(P,Q)
+        Poly(5, x, domain='QQ')
+
+    """
+
     return rem(P, Q, auto=False)
 
 
