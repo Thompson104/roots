@@ -126,7 +126,6 @@ def cof(j, P):
 
 
 def Rem(P, Q):
-
     """
 
         >>> from sympy import Poly, QQ
@@ -174,15 +173,63 @@ def lb(P):
     return -ub(P)
 
 
-def Thom_encoding(s, r):
+def TE(s, r):
     """
         Proposition 2.37 (Thom encoding).
+
+        >>> TE((0, -1, 1),(0, 1, 1))
+        -1
+        >>> TE((0, 1, 1),(0, -1, 1))
+        1
+        >>> TE((0, -1, 1),(0, -1, 1))
+        0
+        >>> TE((0, 1, 1),(0, 1, 1))
+        0
+
+        >>> TE((0,1,-1,1),(0,-1,0,1))
+        -1
+        >>> TE((0,-1,0,1),(0,1,-1,1))
+        1
+        >>> TE((0,-1,0,1),(0,1,1,1))
+        -1
+        >>> TE((0,1,1,1),(0,-1,0,1))
+        1
+
+        >>> TE((0,1,-1,1),(0,-1,1,1))
+        -1
+        >>> TE((0,-1,1,1),(0,1,-1,1))
+        1
+        >>> TE((0,-1,1,1),(0,1,1,1))
+        -1
+        >>> TE((0,1,1,1),(0,-1,1,1))
+        1
+
+        >>> TE((0,1,-1,1),(0,-1,-1,1))
+        -1
+        >>> TE((0,-1,-1,1),(0,1,-1,1))
+        1
+        >>> TE((0,-1,-1,1),(0,1,1,1))
+        -1
+        >>> TE((0,1,1,1),(0,-1,-1,1))
+        1
+
+        >>> TE((0,1,-1,1),(0,1,1,1))
+        -1
+        >>> TE((0,1,1,1),(0,1,-1,1))
+        1
+
     """
 
     d = len(s)
 
     if d != len(r):
         raise Exception('sign conditions must have the same length')
+
+    if not all(map(frozenset([0, -1, 1]).__contains__, s)):
+        raise Exception('s={} contains an intruder'.format(s))
+
+    if not all(map(frozenset([0, -1, 1]).__contains__, r)):
+        raise Exception('r={} contains an intruder'.format(r))
 
     if s == r:
         if s[0] == r[0] == 0:
@@ -700,7 +747,7 @@ def sort(P, Q):
     a = USD(P, Der(P.diff()) + Der(Q))
     b = USD(Q, Der(Q.diff()) + Der(P))
 
-    key = functools.cmp_to_key(Thom_encoding)
+    key = functools.cmp_to_key(TE)
 
     return a, b, sorted(a + b, key=key)
 
