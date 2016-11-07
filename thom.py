@@ -15,6 +15,14 @@ from sympy import ZZ, QQ
 
 
 def pretty(M):
+    """
+
+        >>> pretty([[0,-1],[-1,1]])
+         0 -1
+        -1  1
+
+    """
+
     print(*map(lambda x: " ".join(("{:2d}", )
                                   * len(x)).format(*x), M), sep='\n')
 
