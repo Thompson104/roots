@@ -133,7 +133,7 @@ def Rem(P, Q):
         >>> from sympy.abc import x
         >>> P=Poly( x**3 - 2*x**2 - 4 , domain=QQ )
         >>> Q=Poly( x - 3 , domain = QQ )
-        >>> rem(P,Q)
+        >>> Rem(P,Q)
         Poly(5, x, domain='QQ')
 
     """
