@@ -13,8 +13,11 @@ from sympy import resultant
 from sympy import LC
 from sympy import ZZ, QQ
 
+
 def pretty(M):
-    print(*map(lambda x: " ".join(("{:2d}", ) * len(x)).format(*x), M), sep='\n')
+    print(*map(lambda x: " ".join(("{:2d}", )
+                                  * len(x)).format(*x), M), sep='\n')
+
 
 def Res(P, Q, *gens, **args):
     """
@@ -230,7 +233,6 @@ def Zer(P):
 
 
 def eps(i):
-
     """
 
         >>> tuple(map(eps, range(1, 11)))
@@ -244,6 +246,7 @@ def eps(i):
     if i not in ZZ:
         raise Exception('i must be in ZZ, got {}'.format(i))
 
+    # SLOW IMPLEMENTATION
     # return (-1)**( ( i * ( i - 1 ) ) // 2 )
 
     if i % 4 == 0 or i % 4 == 1:
