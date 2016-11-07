@@ -11,10 +11,10 @@ from sympy import linsolve
 from sympy import Matrix
 from sympy import resultant
 from sympy import LC
-from sympy import ZZ , QQ
+from sympy import ZZ, QQ
 
-def Res ( P , Q , *gens , **args ) :
 
+def Res(P, Q, *gens, **args):
     """
         Computes the resultant of the input polynomials P and Q.
 
@@ -24,11 +24,10 @@ def Res ( P , Q , *gens , **args ) :
 
     """
 
-    return resultant( P,Q,*gens,**args)
+    return resultant(P, Q, *gens, **args)
 
 
-def lcof ( P ) :
-
+def lcof(P):
     """
         Returns the leading coefficient of the input polynomial.
 
@@ -45,13 +44,13 @@ def lcof ( P ) :
 
     """
 
-    if type ( P ) is int :
+    if type(P) is int:
         return P
 
-    return LC( P )
+    return LC(P)
 
-def deg ( P ) :
 
+def deg(P):
     """
         Returns the degree of the input polynomial.
 
@@ -68,13 +67,13 @@ def deg ( P ) :
 
     """
 
-    if type( P ) is int :
+    if type(P) is int:
         return 0
 
-    return max( 0 , P.degree() )
+    return max(0, P.degree())
 
-def cof ( j , P ) :
 
+def cof(j, P):
     """
         Returns the degree of the input polynomial.
 
@@ -101,24 +100,24 @@ def cof ( j , P ) :
 
     """
 
-    if j < 0 :
-        raise Exception( 'index {} out of range for {}'.format( j , P ) )
+    if j < 0:
+        raise Exception('index {} out of range for {}'.format(j, P))
 
-    if type( P ) is int :
+    if type(P) is int:
 
         return P if j == 0 else 0
 
-    else :
+    else:
 
-        return P.all_coeffs()[-j-1] if j <= P.degree() else 0
+        return P.all_coeffs()[-j - 1] if j <= P.degree() else 0
 
-def Rem ( P , Q ) :
+
+def Rem(P, Q):
     # print( 'Rem' , P , Q )
-    return rem( P , Q , auto = False )
+    return rem(P, Q, auto=False)
 
 
-def ub ( P ) :
-
+def ub(P):
     """
         Computes on upper bound on the values of the real roots of P.
 
@@ -132,11 +131,10 @@ def ub ( P ) :
     """
 
     a = P.coeffs()
-    return 2 * sum( map( abs , a ) ) / abs( a[0] )
+    return 2 * sum(map(abs, a)) / abs(a[0])
 
 
-def lb ( P ) :
-
+def lb(P):
     """
         Computes a lower bound on the values of the real roots of P.
 
@@ -149,38 +147,38 @@ def lb ( P ) :
 
     """
 
-    return -ub( P )
+    return -ub(P)
 
 
-def Thom_encoding ( s , r ) :
-
+def Thom_encoding(s, r):
     """
         Proposition 2.37 (Thom encoding).
     """
 
-    d = len( s )
+    d = len(s)
 
-    if d != len( r ) :
-        raise Exception( 'sign conditions must have the same length' )
+    if d != len(r):
+        raise Exception('sign conditions must have the same length')
 
-    if s == r :
-        if s[0] == r[0] == 0 :
+    if s == r:
+        if s[0] == r[0] == 0:
             return 0
-        else :
-            raise Exception( 'not roots but same sign conditions, cannot compare' )
+        else:
+            raise Exception(
+                'not roots but same sign conditions, cannot compare')
 
-    else :
+    else:
         k = 1
-        while k <= d :
-            if s[d-k] != r[d-k] :
+        while k <= d:
+            if s[d - k] != r[d - k]:
                 break
             k += 1
 
-        if s[d-k+1] == 1 :
-            return 1 if s[d-k] > r[d-k] else -1
+        if s[d - k + 1] == 1:
+            return 1 if s[d - k] > r[d - k] else -1
 
-        else :
-            return 1 if s[d-k] < r[d-k] else -1
+        else:
+            return 1 if s[d - k] < r[d - k] else -1
 
 
 # def Var ( P ) :
@@ -209,8 +207,7 @@ def Thom_encoding ( s , r ) :
     # return sum( ( i*j < 0 ) for (i,j) in zip( b[:-1] , b[1:] ) )
 
 
-def Der ( P ) :
-
+def Der(P):
     """
         Returns all the derivatives of P in a tuple.
 
@@ -223,321 +220,321 @@ def Der ( P ) :
 
     """
 
+    return tuple(P.diff((0, d)) for d in range(P.degree() + 1))
 
 
-    return tuple( P.diff((0,d)) for d in range( P.degree() + 1 ) )
-
-
-def Zer ( P ) :
+def Zer(P):
     pass
 
-def eps ( i ) :
 
-    if i < 1 :
-        raise Exception( 'i must be greater or equal to 1, got {}'.format( i ) )
+def eps(i):
 
-    if i not in ZZ :
-        raise Exception( 'i must be in ZZ, got {}'.format( i ) )
+    if i < 1:
+        raise Exception('i must be greater or equal to 1, got {}'.format(i))
+
+    if i not in ZZ:
+        raise Exception('i must be in ZZ, got {}'.format(i))
 
     # return (-1)**( ( i * ( i - 1 ) ) // 2 )
 
-    if i % 4 == 0 or i % 4 == 1 :
+    if i % 4 == 0 or i % 4 == 1:
         return 1
 
-    else :
+    else:
         return -1
 
 
-def PmV ( s ) :
-
+def PmV(s):
     """
         Notation 4.30 (Generalized Permanences minus Variations).
     """
 
-    p = len( s ) - 1
+    p = len(s) - 1
 
-    if s[p] == 0 :
-        raise Exception( 's[p] must be nonzero, got {}'.format(s[p]) )
+    if s[p] == 0:
+        raise Exception('s[p] must be nonzero, got {}'.format(s[p]))
 
     q = p - 1
 
-    while q >= 0 and s[q] == 0 :
+    while q >= 0 and s[q] == 0:
         q -= 1
 
-    if q < 0 :
+    if q < 0:
         return 0
 
-    r = s[:q+1]
+    r = s[:q + 1]
 
-    if p - q % 2 == 1 :
+    if p - q % 2 == 1:
 
-        return PmV( r ) + eps( p - q ) * sign( s[p] * s[q] )
+        return PmV(r) + eps(p - q) * sign(s[p] * s[q])
 
-    else :
+    else:
 
-        return PmV( r )
+        return PmV(r)
 
 
-def SSP ( P , Q ) :
-
+def SSP(P, Q):
     """
         Algorithm 8.76 (Signed Subresultant Polynomials).
     """
 
     # print( 'SSP' , P , Q )
 
-    p = deg( P )
-    q = deg( Q )
+    p = deg(P)
+    q = deg(Q)
 
-    if p <= q :
-        raise Exception( 'P must have strictly larger degree than Q. Got p = {}, q = {}.'.format( p , q ) )
+    if p <= q:
+        raise Exception(
+            'P must have strictly larger degree than Q. Got p = {}, q = {}.'.format(
+                p, q))
 
-    sResP = [ None ] * ( p + 1 )
-    s = [ None ] * ( p + 1 )
-    t = [ None ] * ( p + 1 )
+    sResP = [None] * (p + 1)
+    s = [None] * (p + 1)
+    t = [None] * (p + 1)
 
     sResP[p] = P
     s[p] = t[p] = 1
-    sResP[p-1] = Q
-    bq = cof( q , Q )
-    t[p-1] = bq
-    sResP[q] = eps(p-q) * bq**(p-q-1) * Q
-    s[q] = eps(p-q) * bq**(p-q)
+    sResP[p - 1] = Q
+    bq = cof(q, Q)
+    t[p - 1] = bq
+    sResP[q] = eps(p - q) * bq**(p - q - 1) * Q
+    s[q] = eps(p - q) * bq**(p - q)
 
-    for l in range( q + 1 , p - 1 ) :
+    for l in range(q + 1, p - 1):
         sResP[l] = s[l] = 0
 
     i = p + 1
     j = p
 
-    while sResP[j-1] != 0 :
+    while sResP[j - 1] != 0:
 
-        k = sResP[j-1].degree()
+        k = sResP[j - 1].degree()
 
-        if k < 1 :
+        if k < 1:
             break
 
-        if k == j - 1 :
+        if k == j - 1:
 
-            s[j-1] = t[j-1]
-            sResP[k-1] = -Rem( sResP[i-1].mul_ground(s[j-1]**2) , sResP[j-1] ).div( s[j] * t[i-1] )[0]
+            s[j - 1] = t[j - 1]
+            sResP[k - 1] = -Rem(sResP[i - 1].mul_ground(s[j - 1]**2),
+                                sResP[j - 1]).div(s[j] * t[i - 1])[0]
 
-        elif k < j - 1 :
-            s[j-1] = 0
+        elif k < j - 1:
+            s[j - 1] = 0
 
-            for d in range ( 1 , j - k ) :
+            for d in range(1, j - k):
 
-                t[j-d-1] = (-1)**d * (t[j-1]*t[j-d]) / s[j]
+                t[j - d - 1] = (-1)**d * (t[j - 1] * t[j - d]) / s[j]
 
             s[k] = t[k]
-            sResP[k] = sResP[j-1].mul_ground(s[k]/t[j-1])
+            sResP[k] = sResP[j - 1].mul_ground(s[k] / t[j - 1])
 
             # typo in book, says k + 1 instead of k - 1
-            for l in range( j - 2 , k ) :
+            for l in range(j - 2, k):
                 sResP[l] = s[l] = 0
 
-            sResP[k-1] = -Rem(sResP[i-1].mul_ground(t[j-1]*s[k]),sResP[j-1]).div(s[j] * t[i-1])[0]
+            sResP[k - 1] = -Rem(sResP[i - 1].mul_ground(t[j - 1]
+                                                        * s[k]), sResP[j - 1]).div(s[j] * t[i - 1])[0]
 
-        t[k-1] = lcof( sResP[k-1] )
+        t[k - 1] = lcof(sResP[k - 1])
 
         i = j
         j = k
 
-    for l in range( 0 , j - 1 ) :
+    for l in range(0, j - 1):
         sResP[l] = s[l] = 0
 
-    return tuple( sResP )
+    return tuple(sResP)
 
-def SSC ( P , Q ) :
+
+def SSC(P, Q):
     """
         Algorithm 8.77 (Signed Subresultant Coefficients).
     """
-    sResP = SSP( P , Q )
-    sRes = tuple( cof( i , sResPi ) for (i, sResPi) in enumerate( sResP ) )
+    sResP = SSP(P, Q)
+    sRes = tuple(cof(i, sResPi) for (i, sResPi) in enumerate(sResP))
     return sRes
 
-def UTQ ( Q , P ) :
 
+def UTQ(Q, P):
     """
         Algorithm 9.7 (Univariate Tarski-Query).
     """
 
-    if P == 0 :
+    if P == 0:
 
-        raise Exception( 'P must be nonzero, got {}'.format( P ) )
+        raise Exception('P must be nonzero, got {}'.format(P))
 
-    if Q == 0 :
+    if Q == 0:
 
-        raise Exception( 'Q must be nonzero, got {}'.format( Q ) )
+        raise Exception('Q must be nonzero, got {}'.format(Q))
 
+    q = deg(Q)
 
-    q = deg( Q )
+    if q == 0:
 
-    if q == 0 :
+        b0 = cof(0, Q)
 
-        b0 = cof( 0 , Q )
-
-        sRes = SSC( P , P.diff() )
-        _PmV = PmV( sRes )
+        sRes = SSC(P, P.diff())
+        _PmV = PmV(sRes)
 
         return _PmV if b0 > 0 else -_PmV
 
-    elif q == 1 :
+    elif q == 1:
 
-        b1 = cof( 1 , Q )
-        b0 = cof( 0 , Q )
+        b1 = cof(1, Q)
+        b0 = cof(0, Q)
 
-        p = deg( P )
-        S = ( P.mul_ground( p * b1 ) - P.diff().mul(Q) ).mul( sign(b1) )
+        p = deg(P)
+        S = (P.mul_ground(p * b1) - P.diff().mul(Q)).mul(sign(b1))
 
-        sRes = SSC( P , S )
-        _PmV = PmV( sRes )
+        sRes = SSC(P, S)
+        _PmV = PmV(sRes)
 
         return _PmV
 
-    else :
+    else:
 
-        sRes = SSC( -P.diff().mul( Q ) , P )
-        _PmV = PmV( sRes )
+        sRes = SSC(-P.diff().mul(Q), P)
+        _PmV = PmV(sRes)
 
-        if q - 1 % 2 == 1 :
-            bq = cof( q , Q )
+        if q - 1 % 2 == 1:
+            bq = cof(q, Q)
             return _PmV + sign(bq)
 
         else:
             return _PmV
 
 
-def A ( S , T ) :
+def A(S, T):
 
-    T = tuple( T )
+    T = tuple(T)
 
-    for s in S :
-        for t in T :
+    for s in S:
+        for t in T:
             yield s + (t,)
 
-def X ( S , T ) :
 
-    T = tuple( T )
+def X(S, T):
 
-    if not S[0] :
-        return ( T, )
+    T = tuple(T)
+
+    if not S[0]:
+        return (T, )
 
     # transpose the transpose
 
-    return tuple( zip( *[ s + (t,) for s in zip(*S) for t in T ] ) )
+    return tuple(zip(*[s + (t,) for s in zip(*S) for t in T]))
 
-def T ( M1 , n1 , m1 , M2 , n2 , m2 ) :
 
+def T(M1, n1, m1, M2, n2, m2):
     """
         Notation 2.83 (Modified Tensor Product)
     """
 
-    n = n1*n2
-    m = m1*m2
+    n = n1 * n2
+    m = m1 * m2
 
-    M = [ [ None for j in range( m ) ] for i in range( n ) ]
+    M = [[None for j in range(m)] for i in range(n)]
 
-    for i1 in range( n1 ) :
-        for j1 in range( m1 ) :
-            for i2 in range( n2 ) :
-                for j2 in range( m2 ) :
-                    M[n1*i2+i1][m2*j1+j2] = M1[i1][j1] * M2[i2][j2]
+    for i1 in range(n1):
+        for j1 in range(m1):
+            for i2 in range(n2):
+                for j2 in range(m2):
+                    M[n1 * i2 + i1][m2 * j1 + j2] = M1[i1][j1] * M2[i2][j2]
 
     return M
 
-def TMS ( s ) :
 
+def TMS(s):
     """
         Notation 2.86 (Total matrix of signs).
     """
 
-    if s < 1 :
-        raise Exception( "s must be positive, got {}".format(s) )
+    if s < 1:
+        raise Exception("s must be positive, got {}".format(s))
 
     M1 = (
-        (  1 ,  1 ,  1 ) ,
-        (  0 ,  1 , -1 ) ,
-        (  0 ,  1 ,  1 ) ,
+        (1, 1, 1),
+        (0, 1, -1),
+        (0, 1, 1),
     )
 
-    if s == 1 :
+    if s == 1:
 
         return M1
 
-    else :
+    else:
 
-        return T( TMS(s-1) , 3**(s-1) , 3**(s-1) , M1 , 3 , 3 )
+        return T(TMS(s - 1), 3**(s - 1), 3**(s - 1), M1, 3, 3)
 
 
-
-def NSD ( Z , P , TaQ = None ) :
-
+def NSD(Z, P, TaQ=None):
     """
         Algorithm 10.72 (Naive Sign Determination).
     """
 
-    if TaQ is None :
-        raise Exception( 'Missing Tarski-query black-box implementation' )
+    if TaQ is None:
+        raise Exception('Missing Tarski-query black-box implementation')
 
-    if not P :
-        raise Exception( 'P must be non-empty, got {}.'.format( P ) )
+    if not P:
+        raise Exception('P must be non-empty, got {}.'.format(P))
 
     s = len(P)
 
-    Ms = TMS( s )
-    Sigma = tuple( itertools.product( (0,1,-1) , repeat = s ) )
-    A = tuple( itertools.product( (0,1,2) , repeat = s ) )
+    Ms = TMS(s)
+    Sigma = tuple(itertools.product((0, 1, -1), repeat=s))
+    A = tuple(itertools.product((0, 1, 2), repeat=s))
 
     # print( Ms )
     # print( Sigma )
     # print( A )
 
-    TaQ_PA_Z = [ ]
-    for a in A :
-        t = TaQ( prod( P[i]**a[i] for i in range( s ) ), Z )
-        TaQ_PA_Z.append( t )
+    TaQ_PA_Z = []
+    for a in A:
+        t = TaQ(prod(P[i]**a[i] for i in range(s)), Z)
+        TaQ_PA_Z.append(t)
 
     # print( TaQ_PA_Z )
-    symb = [ Symbol("".join(map(str,s))) for s in Sigma ]
+    symb = [Symbol("".join(map(str, s))) for s in Sigma]
 
-    solutions = linsolve ( ( Matrix( Ms ) , Matrix( TaQ_PA_Z ) ) , symb )
+    solutions = linsolve((Matrix(Ms), Matrix(TaQ_PA_Z)), symb)
     c_SZ = next(iter(solutions))
 
     # the >= 1 should be a != 0, weird :S
     # should not be reversed
-    return tuple( map( tuple , map( reversed ,itertools.compress( Sigma , map( lambda x : x >= 1 , c_SZ ) ) ) ) )
+    return tuple(map(tuple, map(reversed, itertools.compress(
+        Sigma, map(lambda x: x >= 1, c_SZ)))))
 
 
-def BSD ( Z , P , TaQ = None ) :
-
+def BSD(Z, P, TaQ=None):
     """
         Algorithm 10.96 (Better Sign Determination).
     """
 
-    if TaQ is None :
-        raise Exception( 'Missing Tarski-query black-box implementation' )
+    if TaQ is None:
+        raise Exception('Missing Tarski-query black-box implementation')
 
-    if not P :
-        raise Exception( 'P must be non-empty, got {}.'.format( P ) )
+    if not P:
+        raise Exception('P must be non-empty, got {}.'.format(P))
 
     s = len(P)
 
     _symbols = P[0].free_symbols
     _domain = P[0].domain
 
-    _1 = Poly( 1, *_symbols, domain=_domain )
-    r = TaQ( _1 , Z )
+    _1 = Poly(1, *_symbols, domain=_domain)
+    r = TaQ(_1, Z)
 
-    if r == 0 :
+    if r == 0:
         return ()
 
-    Sigma = [ None ] * ( s + 1 )
-    c     = [ None ] * ( s + 1 )
-    Comp  = [ None ] * ( s + 1 )
-    Ada   = [ None ] * ( s + 1 )
-    t     = [ None ] * ( s + 1 )
-    Mat   = [ None ] * ( s + 1 )
+    Sigma = [None] * (s + 1)
+    c = [None] * (s + 1)
+    Comp = [None] * (s + 1)
+    Ada = [None] * (s + 1)
+    t = [None] * (s + 1)
+    Mat = [None] * (s + 1)
 
     Sigma[0] = ((),)
     c[0] = (r,)
@@ -546,10 +543,10 @@ def BSD ( Z , P , TaQ = None ) :
     t[0] = (r,)
     Mat[0] = (1,)
 
-    for i , Pi in enumerate( P , 1 ) :
+    for i, Pi in enumerate(P, 1):
 
-        l = TaQ( Pi , Z )
-        s = TaQ( Pi**2 , Z )
+        l = TaQ(Pi, Z)
+        s = TaQ(Pi**2, Z)
         # Solve the constant-size linear system
         #
         #  / 1  1  1 \   / c( Pi = 0 , Z ) \     / TaQ( Pi**0 , Z ) \
@@ -558,130 +555,159 @@ def BSD ( Z , P , TaQ = None ) :
         #
 
         eq = r - s
-        gt = ( l + s ) / 2
-        lt = ( s - l ) / 2
+        gt = (l + s) / 2
+        lt = (s - l) / 2
 
         _SIGNPiZ = []
 
-        if eq :
+        if eq:
             _SIGNPiZ.append(0)
-        if gt :
+        if gt:
             _SIGNPiZ.append(1)
-        if lt :
+        if lt:
             _SIGNPiZ.append(-1)
 
-        rPi = len( _SIGNPiZ )
-        SIGNPiZ = tuple( _SIGNPiZ )
+        rPi = len(_SIGNPiZ)
+        SIGNPiZ = tuple(_SIGNPiZ)
 
-        if rPi == 1 :
+        if rPi == 1:
 
-            Sigma[i] = tuple( A( Sigma[i-1] , _SIGNPiZ ) )
-            c[i] = c[i-1]
-            Comp[i] = Comp[i-1]
-            Ada[i] = Ada[i-1]
-            t[i] = t[i-1]
-            Mat[i] = Mat[i-1]
+            Sigma[i] = tuple(A(Sigma[i - 1], _SIGNPiZ))
+            c[i] = c[i - 1]
+            Comp[i] = Comp[i - 1]
+            Ada[i] = Ada[i - 1]
+            t[i] = t[i - 1]
+            Mat[i] = Mat[i - 1]
 
-        else :
+        else:
 
             # complex case :(
 
-            Sigma_ = tuple( A( ( Sigma[i-1][j] for j in Comp[i-1] ) , _SIGNPiZ ) )
-            AdaSigma_ = X( Ada[i-1] , range( len( _SIGNPiZ ) ) )
+            Sigma_ = tuple(A((Sigma[i - 1][j] for j in Comp[i - 1]), _SIGNPiZ))
+            AdaSigma_ = X(Ada[i - 1], range(len(_SIGNPiZ)))
 
             # MAGIC HAPPENS
 
-            print( Sigma_ )
-            print( AdaSigma_ )
+            print(Sigma_)
+            print(AdaSigma_)
 
     return r
 
-def USD ( Q , P ) :
 
+def USD(Q, P):
     """
         Algorithm 10.97 (Univariate Sign Determination).
     """
 
-    return NSD( Q , P , TaQ = UTQ )
+    return NSD(Q, P, TaQ=UTQ)
 
 
-
-def sort ( P , Q ) :
-
+def sort(P, Q):
     """
         Algorithm 10.105 (Comparison of Roots in a Real Closed Field).
     """
 
-    if P == 0 :
+    if P == 0:
 
-        raise Exception( 'P must be nonzero, got {}'.format( P ) )
+        raise Exception('P must be nonzero, got {}'.format(P))
 
-    if Q == 0 :
+    if Q == 0:
 
-        raise Exception( 'Q must be nonzero, got {}'.format( Q ) )
+        raise Exception('Q must be nonzero, got {}'.format(Q))
 
     # should work with this simpler implementation ??
     # a = USD( P , Der( Q ) )
     # b = USD( Q , Der( Q ) )
-    a = USD( P , Der( P.diff() ) + Der( Q ) )
-    b = USD( Q , Der( Q.diff() ) + Der( P ) )
+    a = USD(P, Der(P.diff()) + Der(Q))
+    b = USD(Q, Der(Q.diff()) + Der(P))
 
-    key = functools.cmp_to_key( Thom_encoding )
+    key = functools.cmp_to_key(Thom_encoding)
 
-    return a , b , sorted( a + b , key = key )
+    return a, b, sorted(a + b, key=key)
 
-def interleaving ( P , Q ) :
 
-    a , b , s = sort( P , Q )
+def interleaving(P, Q):
+
+    a, b, s = sort(P, Q)
 
     b = frozenset(b)
 
-    return tuple( int( x in b ) for x in s )
+    return tuple(int(x in b) for x in s)
 
 
-if __name__ == '__main__' :
+if __name__ == '__main__':
 
     from sympy.abc import a, b, c, x
 
     # TESTS
 
-    t = tuple( map( eps, range( 1 , 11 ) ) )
+    t = tuple(map(eps, range(1, 11)))
 
-    assert( t == ( 1 , -1 , -1 , 1 , 1 , -1 , -1 , 1 , 1 , -1 ) )
+    assert(t == (1, -1, -1, 1, 1, -1, -1, 1, 1, -1))
 
-    f = 9*x**13 - 18*x**11 - 33*x**10 + 102*x**8 + 7*x**7 - 36*x**6 - 122*x**5 + 49*x**4 + 93*x**3 - 42*x**2 - 18*x + 9
-    P = Poly( f , x , domain=QQ)
-    t = tuple( reversed( SSC(P,P.diff() ) ) )[:9]
-    e = ( 9, 117, 37908, -72098829, -666229317948, -1663522740400320,
-    -2181968897553243072, -151645911413926622112,
-    -165117711302736225120 )
-    assert( t == e )
+    f = 9 * x**13 - 18 * x**11 - 33 * x**10 + 102 * x**8 + 7 * x**7 - 36 * \
+        x**6 - 122 * x**5 + 49 * x**4 + 93 * x**3 - 42 * x**2 - 18 * x + 9
+    P = Poly(f, x, domain=QQ)
+    t = tuple(reversed(SSC(P, P.diff())))[:9]
+    e = (9, 117, 37908, -72098829, -666229317948, -1663522740400320,
+         -2181968897553243072, -151645911413926622112,
+         -165117711302736225120)
+    assert(t == e)
 
+    f = x**4 + a * x**2 + b * x + c
+    P = Poly(f, x, domain=QQ[a, b, c])
+    t = tuple(reversed(SSP(P, P.diff())))
 
-    f = x**4 + a*x**2 + b*x + c
-    P = Poly( f , x , domain=QQ[a,b,c] )
-    t = tuple( reversed( SSP( P , P.diff()) ) )
+    e = (Poly(x**4 + a * x**2 + b * x + c, x, domain=QQ[a, b, c]),
+         Poly(4 * x**3 + 2 * a * x + b, x, domain=QQ[a, b, c]),
+         Poly(-8 * a * x**2 - 12 * b * x - 16 * c, x, domain=QQ[a, b, c]),
+         Poly((-8 * a**3 + 32 * a * c - 36 * b**2) * x - 4 * a**2 * b - 48 * b * c, x, domain=QQ[a, b, c]),
+         Poly(16 * a**4 * c - 4 * a**3 * b**2 - 128 * a**2 * c**2 + 144 * a * b**2 * c - 27 * b**4 +
+              256 * c**3, x, domain=QQ[a, b, c]))
 
-    e = ( Poly(x**4 + a*x**2 + b*x + c, x, domain=QQ[a,b,c]),
-    Poly(4*x**3 + 2*a*x + b, x, domain=QQ[a,b,c]),
-    Poly(-8*a*x**2 - 12*b*x - 16*c, x, domain=QQ[a,b,c]),
-    Poly((-8*a**3 + 32*a*c - 36*b**2)*x - 4*a**2*b - 48*b*c, x, domain=QQ[a,b,c]),
-    Poly(16*a**4*c - 4*a**3*b**2 - 128*a**2*c**2 + 144*a*b**2*c - 27*b**4 +
-        256*c**3, x, domain=QQ[a,b,c]))
+    assert(t == e)
 
-    assert( t == e )
+    f = x**4 + a * x**2 + b * x + c
+    P = Poly(f, x, domain=QQ[a, b, c])
+    t = SSP(P, P.diff().diff())
+    e = (
+        Poly(
+            400 * a**4 - 5760 * a**2 * c + 3456 * a * b**2 + 20736 * c**2,
+            x,
+            domain=QQ[
+                a,
+                b,
+                c]),
+        Poly(
+            1728 * b * x - 240 * a**2 + 1728 * c,
+            x,
+            domain=QQ[
+                a,
+                b,
+                c]),
+        Poly(
+            -144 * x**2 - 24 * a,
+            x,
+            domain=QQ[
+                a,
+                b,
+                c]),
+        Poly(
+            12 * x**2 + 2 * a,
+            x,
+            domain=QQ[
+                a,
+                b,
+                c]),
+        Poly(
+            x**4 + a * x**2 + b * x + c,
+            x,
+            domain=QQ[
+                a,
+                b,
+                c]))
 
-    f = x**4 + a*x**2 + b*x + c
-    P = Poly( f , x , domain=QQ[a,b,c] )
-    t = SSP( P , P.diff().diff())
-    e = (Poly(400*a**4 - 5760*a**2*c + 3456*a*b**2 + 20736*c**2, x, domain=QQ[a,b,c]),
-        Poly(1728*b*x - 240*a**2 + 1728*c, x, domain=QQ[a,b,c]),
-        Poly(-144*x**2 - 24*a, x, domain=QQ[a,b,c]),
-        Poly(12*x**2 + 2*a, x, domain=QQ[a,b,c]),
-        Poly(x**4 + a*x**2 + b*x + c, x, domain=QQ[a,b,c])
-    )
-
-    assert( t == e )
+    assert(t == e)
 
     # TMS(2) =
     # 1  1  1  1  1  1  1  1  1
@@ -706,17 +732,17 @@ if __name__ == '__main__' :
         [0, 0, 0, 0, 1, 1, 0, -1, -1],
         [0, 0, 0, 0, 1, 1, 0, 1, 1]
     ]
-    assert( t == e )
+    assert(t == e)
 
     # SANDBOX
 
-    def pretty ( M ) :
-        print( *map( lambda x : " ".join( ( "{:2d}" , ) * len( x ) ).format( *x ) , M) , sep = '\n')
+    def pretty(M):
+        print(
+            *map(lambda x: " ".join(("{:2d}", ) * len(x)).format(*x), M), sep='\n')
 
-    f = (x-1)*(x-3)
-    g = (x-2)
-    P = Poly( f , x , domain=QQ)
-    Q = Poly( g , x , domain=QQ)
-    i = interleaving( P , Q )
-    print( i )
-
+    f = (x - 1) * (x - 3)
+    g = (x - 2)
+    P = Poly(f, x, domain=QQ)
+    Q = Poly(g, x, domain=QQ)
+    i = interleaving(P, Q)
+    print(i)
