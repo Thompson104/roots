@@ -2,14 +2,71 @@
 
 import itertools
 import functools
-from sympy import *
+from sympy import Poly
+from sympy import Symbol
+from sympy import rem
+from sympy import prod
+from sympy import sign
+from sympy import linsolve
+from sympy import Matrix
+from sympy import resultant
+from sympy import LC
+from sympy import ZZ , QQ
 
-Res = resultant
+def Res ( P , Q , *gens , **args ) :
+
+    """
+        Computes the resultant of the input polynomials P and Q.
+
+        >>> from sympy.abc import x
+        >>> Res( x**2 + 1 , x**2 - 1)
+        4
+
+    """
+
+    return resultant( P,Q,*gens,**args)
+
 
 def lcof ( P ) :
+
+    """
+        Returns the leading coefficient of the input polynomial.
+
+        >>> lcof( 0 )
+        0
+        >>> lcof(1)
+        1
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> lcof( Poly( x**2 ) )
+        1
+        >>> lcof( Poly( x**16 ).div(Poly( 3*x**9 ))[0] )
+        1/3
+
+    """
+
+    if type ( P ) is int :
+        return P
+
     return LC( P )
 
 def deg ( P ) :
+
+    """
+        Returns the degree of the input polynomial.
+
+        >>> deg(0)
+        0
+        >>> deg(1)
+        0
+        >>> from sympy import Poly, Symbol
+        >>> from sympy.abc import x
+        >>> deg( Poly( x**2 ) )
+        2
+        >>> deg( Poly( x**16 ).div(Poly( 3*x**9 ))[0] )
+        7
+
+    """
 
     if type( P ) is int :
         return 0
@@ -17,6 +74,32 @@ def deg ( P ) :
     return max( 0 , P.degree() )
 
 def cof ( j , P ) :
+
+    """
+        Returns the degree of the input polynomial.
+
+        >>> cof(0,0)
+        0
+        >>> cof(0,1)
+        1
+        >>> cof(17,1)
+        0
+        >>> from sympy import Poly, Symbol
+        >>> from sympy.abc import x
+        >>> cof( 2 , Poly( x**2 + 2*x ) )
+        1
+        >>> cof( 1 , Poly( x**2 + 2*x ) )
+        2
+        >>> cof( 7 , Poly( x**16 ).div(Poly( 3*x**9 ))[0] )
+        1/3
+        >>> cof( 8 , Poly( x**16 ).div(Poly( 3*x**9 ))[0] )
+        0
+        >>> cof(-1,0)
+        Traceback (most recent call last):
+            ...
+        Exception: index -1 out of range for 0
+
+    """
 
     if j < 0 :
         raise Exception( 'index {} out of range for {}'.format( j , P ) )
@@ -35,11 +118,37 @@ def Rem ( P , Q ) :
 
 
 def ub ( P ) :
+
+    """
+        Computes on upper bound on the values of the real roots of P.
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> f = x**2 - 1
+        >>> P = Poly( f , x , domain=QQ)
+        >>> ub( P )
+        4
+
+    """
+
     a = P.coeffs()
     return 2 * sum( map( abs , a ) ) / abs( a[0] )
 
 
 def lb ( P ) :
+
+    """
+        Computes a lower bound on the values of the real roots of P.
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> f = x**2 - 1
+        >>> P = Poly( f , x , domain=QQ)
+        >>> lb( P )
+        -4
+
+    """
+
     return -ub( P )
 
 
@@ -74,33 +183,47 @@ def Thom_encoding ( s , r ) :
             return 1 if s[d-k] < r[d-k] else -1
 
 
-def Var ( P ) :
+# def Var ( P ) :
 
-    if b is None :
-        return _Var_at( P , a )
+    # if b is None :
+        # return _Var_at( P , a )
 
-    else :
-        return _Var_at( P , a ) - _Var_at( P , b )
-
-
-def _Var_at ( P , a ) :
-
-    _a = map( lambda f : f(a) , P )
-
-    return _Var( _a )
+    # else :
+        # return _Var_at( P , a ) - _Var_at( P , b )
 
 
-def _Var ( a ) :
+# def _Var_at ( P , a ) :
 
-    b = tuple( filter( lambda x : x != 0 ) )
+    # _a = map( lambda f : f(a) , P )
 
-    if len( b ) < 2 :
-        return 0
+    # return _Var( _a )
 
-    return sum( ( i*j < 0 ) for (i,j) in zip( b[:-1] , b[1:] ) )
+
+# def _Var ( a ) :
+
+    # b = tuple( filter( lambda x : x != 0 ) , a )
+
+    # if len( b ) < 2 :
+        # return 0
+
+    # return sum( ( i*j < 0 ) for (i,j) in zip( b[:-1] , b[1:] ) )
 
 
 def Der ( P ) :
+
+    """
+        Returns all the derivatives of P in a tuple.
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> f = x**2 - 1
+        >>> P = Poly( f , x , domain=QQ)
+        >>> Der( P )
+        (Poly(x**2 - 1, x, domain='QQ'), Poly(2*x, x, domain='QQ'), Poly(2, x, domain='QQ'))
+
+    """
+
+
 
     return tuple( P.diff((0,d)) for d in range( P.degree() + 1 ) )
 
@@ -521,15 +644,6 @@ if __name__ == '__main__' :
     from sympy.abc import a, b, c, x
 
     # TESTS
-
-    f = x**2 - 1
-    P = Poly( f , x , domain=QQ)
-    assert( lb( P ) == -4 )
-    assert( ub( P ) == 4 )
-
-    t = Der( P )
-    e = (Poly(x**2 - 1, x, domain='QQ'), Poly(2*x, x, domain='QQ'), Poly(2, x, domain='QQ'))
-    assert( t == e )
 
     t = tuple( map( eps, range( 1 , 11 ) ) )
 
