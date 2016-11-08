@@ -357,15 +357,15 @@ def PmV(s):
     if q < 0:
         return 0
 
-    r = s[:q + 1]
+    _s = s[:q + 1]
 
-    if p - q % 2 == 1:
+    if ( p - q ) % 2 == 1:
 
-        return PmV(r) + eps(p - q) * sign(s[p] * s[q])
+        return PmV(_s) + eps(p - q) * sign(s[p] * s[q])
 
     else:
 
-        return PmV(r)
+        return PmV(_s)
 
 
 def SSP(P, Q):
@@ -571,7 +571,7 @@ def UTQ(Q, P):
         sRes = SSC(-P.diff().mul(Q), P)
         _PmV = PmV(sRes)
 
-        if q - 1 % 2 == 1:
+        if ( q - 1 ) % 2 == 1:
             bq = cof(q, Q)
             return _PmV + sign(bq)
 
@@ -666,10 +666,10 @@ def NSD(Z, P, TaQ=None):
         >>> from sympy.abc import x
         >>> P = Poly(x**2, x, domain=QQ)
         >>> NSD(P, Der(P), TaQ=UTQ)
-        ((0,0,1))
+        ((0, 0, 1),)
         >>> P = Poly(-x**2, x, domain=QQ)
         >>> NSD(P, Der(P), TaQ=UTQ)
-        ((0,0,-1))
+        ((0, 0, -1),)
 
     """
 
@@ -679,33 +679,33 @@ def NSD(Z, P, TaQ=None):
     if not P:
         raise Exception('P must be non-empty, got {}.'.format(P))
 
+    P = list(reversed(P))
     s = len(P)
 
     Ms = TMS(s)
     Sigma = tuple(itertools.product((0, 1, -1), repeat=s))
     A = tuple(itertools.product((0, 1, 2), repeat=s))
 
-    # print( Ms )
+    # pretty( Ms )
     # print( Sigma )
     # print( A )
 
     TaQ_PA_Z = []
     for a in A:
+        # print(' * '.join('P[{}]^{}'.format(i,a[i]) for i in range(s)))
         t = TaQ(prod(P[i]**a[i] for i in range(s)), Z)
         TaQ_PA_Z.append(t)
 
-    print( TaQ_PA_Z )
+    # print( TaQ_PA_Z )
 
     # print( TaQ_PA_Z )
-    symb = [Symbol("".join(map(str, s))) for s in Sigma]
+    symb = [Symbol("c_{}".format(s)) for s in Sigma]
+    # print(symb)
 
     solutions = linsolve((Matrix(Ms), Matrix(TaQ_PA_Z)), symb)
-    pretty(Ms)
-    print( solutions )
+    # print( solutions )
     c_SZ = next(iter(solutions))
 
-    # the >= 1 should be a != 0, weird :S
-    # should not be reversed
     return tuple(map(tuple, itertools.compress(Sigma, map(lambda x: x != 0, c_SZ))))
 
 
