@@ -829,13 +829,44 @@ def sort(P, Q):
     return a, b, sorted(a + b, key=key)
 
 
-def interleaving(P, Q):
+class Interleaving (object):
 
-    a, b, s = sort(P, Q)
+    def __init__(self, P, Q):
 
-    b = frozenset(b)
+        a, b, s = sort(P, Q)
+        _a = frozenset(a)
+        _b = frozenset(b)
+        i = tuple(int(x in _b) for x in s)
 
-    return tuple(int(x in b) for x in s)
+        self.P = P
+        self.Q = Q
+        self.a = a
+        self.b = b
+        self._a = _a
+        self._b = _b
+        self.s = s
+        self.i = i
+
+    def __repr__(self):
+
+        S = 'pq'
+        l = '<'
+        e = '='
+        s = ' '
+
+        x = self.i[0]
+        r = [S[x]]
+
+        for j, x in enumerate(self.i[1:]):
+
+            if self.i[j] < x:
+                r.append(l)
+            else:
+                r.append(e)
+
+            r.append(S[x])
+
+        return s.join(r)
 
 
 if __name__ == '__main__':
@@ -846,5 +877,6 @@ if __name__ == '__main__':
     g = (x - 2)
     P = Poly(f, x, domain=QQ)
     Q = Poly(g, x, domain=QQ)
-    i = interleaving(P, Q)
+    i = Interleaving(P, Q)
+
     print(i)
