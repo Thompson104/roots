@@ -20,6 +20,7 @@ from sympy import Matrix
 from sympy import resultant
 from sympy import LC
 from sympy import ZZ, QQ
+from sympy import oo
 
 
 def pretty(M):
@@ -151,7 +152,18 @@ def Rem(P, Q):
 
 def ub(P):
     """
-        Computes on upper bound on the values of the real roots of P.
+        Proposition 2.7. Let P = a[p]X^p + ... + a[0], a[p] != 0, be a
+        polynomial with coefficients in an ordered field F. If
+
+        |x| > 2*sum(abs(ai/a[0]) for ai in a),
+
+        then P(x) and a[p]x^p have the same sign.
+
+        =======
+        Summary
+        =======
+
+        Computes an upper bound on the values of the real roots of P.
 
         >>> from sympy import Poly, QQ
         >>> from sympy.abc import x
@@ -168,7 +180,8 @@ def ub(P):
 
 def lb(P):
     """
-        Computes a lower bound on the values of the real roots of P.
+        Computes a lower bound on the values of the real roots of P. See
+        Proposition 2.7.
 
         >>> from sympy import Poly, QQ
         >>> from sympy.abc import x
@@ -323,9 +336,72 @@ def eps(i):
         return -1
 
 
+def Var(P, a=None, b=None):
+    """
+        Given a and b in R U {-oo,+oo}, we denote
+
+        Var(P;a,b) = Var(P;a) - Var(P;b)
+    """
+
+    if b is None:
+        return _Var_at(P, a)
+
+    else:
+        return _Var_at(P, a) - _Var_at(P, b)
+
+
+def _Var_at(P, a):
+    """
+        Notation 2.45 (Sign variations in a sequence of polynomials at a).
+
+        Let P = P[0],P[1],...,P[d] be a sequence of polynomials and let a be an
+        element of R U {-oo,+oo}. The number of sign variations of P at a,
+        denoted by Var(P;a), is Var(P[0](a),...,P[d](a)) (at -oo and +oo the
+        signs to consider are the signs of the leading monomials according to
+        Proposition 2.7).
+
+    """
+
+    _a = map(lambda f: f(a), P)
+
+    return _Var(_a)
+
+
+def _Var(a):
+
+    b = tuple(filter(lambda x: x != 0), a)
+
+    if len(b) < 2:
+        return 0
+
+    return sum((i * j < 0) for (i, j) in zip(b[:-1], b[1:]))
+
+
 def NGPmV(s):
     """
         Notation 4.30 (Generalized Permanences minus Variations).
+
+        Let s = s[p],...,s[0] be a finite list of elements in an ordered field
+        K such that s[p] != 0. Let q < p such that s[p-1] = ... = s[q+1] = 0,
+        and s[q] != 0, and s' = s[q],...,s[0]. (if there exists no such q, s'
+        is the empty list). We define inductively
+
+                  / 0                                  if s' is empty,
+                 |
+        PmV(s) = |  PmV(s') + eps(p-q) sign(s[p],s[q]) if p - q is odd,
+                 |
+                  \ PmV(s')                            if p - q is even,
+
+        where eps(p-q) is defined in Notation 4.26.
+
+        Note that when all element of s are non-zero, PmV(s) is the difference
+        between the number of sign permanence and the number of sign variations
+        in s[p],...,s[0]. Note also that when s is the sequence of coefficients
+        of polynomials P = P[p],...,P[0] with deg(P[i])=i, then
+
+                               PmV(s) = Var(P;-oo,+oo)
+
+        (see Notation 2.45).
 
         >>> from sympy import Poly, QQ
         >>> from sympy.abc import x
