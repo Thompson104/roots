@@ -186,6 +186,19 @@ def PTE(s, r):
     """
         Proposition 2.37 (Thom encoding).
 
+        Let P be a non-zero polynomial of degree d with coefficients in R. Let
+        a and b be two elements of R, and denote by s and r the sign
+        conditions on Der(P) realized at a and b. Then:
+
+        1. If s = r and s(P) = r(P) = 0 then a = b.
+        2. If s != r, one can decide whether a < b or a > b as follows. Let k
+        be the smallest integer such that s(P.diff(d-k)) and r(P.diff(d-k)) are
+        different. Then s(P.diff(d-k+1)) = r(P.diff(d-k+1)) != 0.
+            2.1. If s(P.diff(d-k+1)) = r(P.diff(d-k+1)) = 1,
+                a > b <=> s(P.diff(d-k)) > r(P.diff(d-k))
+            2.2. If s(P.diff(d-k+1)) = r(P.diff(d-k+1)) = -1,
+                a > b <=> s(P.diff(d-k)) < r(P.diff(d-k))
+
         >>> PTE((0, -1, 1),(0, 1, 1))
         -1
         >>> PTE((0, 1, 1),(0, -1, 1))
