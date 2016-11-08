@@ -359,7 +359,7 @@ def PmV(s):
 
     _s = s[:q + 1]
 
-    if ( p - q ) % 2 == 1:
+    if (p - q) % 2 == 1:
 
         return PmV(_s) + eps(p - q) * sign(s[p] * s[q])
 
@@ -571,7 +571,7 @@ def UTQ(Q, P):
         sRes = SSC(-P.diff().mul(Q), P)
         _PmV = PmV(sRes)
 
-        if ( q - 1 ) % 2 == 1:
+        if (q - 1) % 2 == 1:
             bq = cof(q, Q)
             return _PmV + sign(bq)
 
@@ -706,7 +706,8 @@ def NSD(Z, P, TaQ=None):
     # print( solutions )
     c_SZ = next(iter(solutions))
 
-    return tuple(map(tuple, itertools.compress(Sigma, map(lambda x: x != 0, c_SZ))))
+    return tuple(map(tuple, itertools.compress(
+        Sigma, map(lambda x: x != 0, c_SZ))))
 
 
 def BSD(Z, P, TaQ=None):
