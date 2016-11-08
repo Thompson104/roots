@@ -163,7 +163,8 @@ def ub(P):
         Summary
         =======
 
-        Computes an upper bound on the values of the real roots of P.
+        Computes a non-inclusive upper bound on the values of the real roots of
+        P.
 
         >>> from sympy import Poly, QQ
         >>> from sympy.abc import x
@@ -180,8 +181,8 @@ def ub(P):
 
 def lb(P):
     """
-        Computes a lower bound on the values of the real roots of P. See
-        Proposition 2.7.
+        Computes a non-inclusive lower bound on the values of the real roots of
+        P. See Proposition 2.7.
 
         >>> from sympy import Poly, QQ
         >>> from sympy.abc import x
@@ -289,6 +290,15 @@ def PTE(s, r):
 
 def Der(P):
     """
+        Notation 2.35 (Derivatives).
+
+        Let P be a univariate polynomial of degree p in R[X]. We denote by
+        Der(P) the list P.diff(0),P.diff(1),...,P.diff(p).
+
+        =======
+        Summary
+        =======
+
         Returns all the derivatives of P in a tuple.
 
         >>> from sympy import Poly, QQ
@@ -336,21 +346,21 @@ def eps(i):
         return -1
 
 
-def Var(P, a=None, b=None):
+def SVSP(P):
+    return SVSPab(P, lb(P), ub(P))
+
+
+def SVSPab(P, a, b):
     """
         Given a and b in R U {-oo,+oo}, we denote
 
         Var(P;a,b) = Var(P;a) - Var(P;b)
     """
 
-    if b is None:
-        return _Var_at(P, a)
-
-    else:
-        return _Var_at(P, a) - _Var_at(P, b)
+    return SVSPa(P, a) - SVSPa(P, b)
 
 
-def _Var_at(P, a):
+def SVSPa(P, a):
     """
         Notation 2.45 (Sign variations in a sequence of polynomials at a).
 
@@ -360,21 +370,49 @@ def _Var_at(P, a):
         signs to consider are the signs of the leading monomials according to
         Proposition 2.7).
 
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> P = ( Poly(f,x) for f in (x**5, x**2 - 1, 0, x**2-1, x+2, 1))
+        >>> SVSPa(P,1)
+        0
+
     """
 
-    _a = map(lambda f: f(a), P)
+    _a = map(lambda Pi: Pi(a), P)
 
-    return _Var(_a)
+    return SV(_a)
 
 
-def _Var(a):
+def SV(a):
+    """
+        Notation 2.43 (Sign variations).
 
-    b = tuple(filter(lambda x: x != 0), a)
+        The number of sign variations, Var(a), in a sequence, a = a[0],...,a[p]
+        of elements in R\{0} is defined by induction on p by:
+
+        Var(a[0]) = 0,
+
+                              / Var(a[1],...,a[p]) + 1 if a[0]*a[1] < 0,
+        Var(a[0],...,a[p]) = |
+                              \ Var(a[1],...,a[p])     if a[0]*a[1] > 0.
+
+        This definition extends to any finite sequence a of elements in R by
+        considering the finite sequence b obtained by dropping the zeros in a
+        and defining
+
+                        Var(a) = Var(b), Var(emptyset) = 0.
+
+        >>> SV((1, -1, 2, 0, 0, 3, 4, -5, -2, 0, 3))
+        4
+
+    """
+
+    b = tuple(filter(lambda x: x != 0, a))
 
     if len(b) < 2:
         return 0
 
-    return sum((i * j < 0) for (i, j) in zip(b[:-1], b[1:]))
+    return sum(1 if i * j < 0 else 0 for (i, j) in zip(b[:-1], b[1:]))
 
 
 def NGPmV(s):
