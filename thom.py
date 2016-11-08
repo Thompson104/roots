@@ -294,8 +294,8 @@ def Der(P):
     return tuple(P.diff((0, d)) for d in range(P.degree() + 1))
 
 
-def Zer(P):
-    pass
+# def Zer(P):
+    # pass
 
 
 def eps(i):
@@ -325,6 +325,23 @@ def eps(i):
 def PmV(s):
     """
         Notation 4.30 (Generalized Permanences minus Variations).
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> P1 = Poly( x , x , domain=QQ)
+        >>> PmV(SSC(P1, P1.diff()))
+        1
+        >>> P2 = Poly( x**2 , x , domain=QQ)
+        >>> PmV(SSC(P2, P2.diff()))
+        1
+        >>> P3 = Poly( x**3 , x , domain=QQ)
+        >>> PmV(SSC(P3, P3.diff()))
+        1
+        >>> P4 = Poly( x**2 - 1 , x , domain=QQ)
+        >>> PmV(SSC(P4, P4.diff()))
+        2
+
+
     """
 
     p = len(s) - 1
@@ -469,6 +486,42 @@ def SSC(P, Q):
 def UTQ(Q, P):
     """
         Algorithm 9.7 (Univariate Tarski-Query).
+
+        UTQ(Q,Z) = sum(Q(x) for x in Zer(P))
+
+        C0 = len(list(x for x in Zer(P) if Q(x) == 0))
+        C- = len(list(x for x in Zer(P) if Q(x) < 0))
+        C+ = len(list(x for x in Zer(P) if Q(x) > 0))
+
+        UTQ(Q,Z) = C+ - C-
+        UTQ(Q**2,Z) = C+ + C-
+        UTQ(1,Z) = C0 + C+ + C-
+
+         / 1  1  1 \   / c0 \     / UTQ( 1 , P )    \
+        |  0  1 -1  | |  c+  | = |  UTQ( Q , P )     |
+         \ 0  1  1 /   \ c- /     \ UTQ( Q**2 , P ) /
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> P = Poly(2*x + 1, x, domain=QQ)
+        >>> UTQ(P,P)
+        0
+        >>> P = Poly(x**2 - 2*x + 1, x, domain=QQ)
+        >>> UTQ(P,P)
+        0
+        >>> P = Poly(x**3, x, domain=QQ)
+        >>> UTQ(P,P)
+        0
+        >>> Q = Poly(7, x, domain=QQ)
+        >>> UTQ(Q, P)
+        1
+        >>> Q = Poly(-7, x, domain=QQ)
+        >>> UTQ(Q, P)
+        -1
+        >>> Q = Poly(0, x, domain=QQ)
+        >>> UTQ(Q, P)
+        0
+
     """
 
     if P == 0:
@@ -477,7 +530,8 @@ def UTQ(Q, P):
 
     if Q == 0:
 
-        raise Exception('Q must be nonzero, got {}'.format(Q))
+        # raise Exception('Q must be nonzero, got {}'.format(Q))
+        return 0
 
     q = deg(Q)
 
@@ -598,6 +652,16 @@ def TMS(s):
 def NSD(Z, P, TaQ=None):
     """
         Algorithm 10.72 (Naive Sign Determination).
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> P = Poly(x**2, x, domain=QQ)
+        >>> NSD(P, Der(P), TaQ=UTQ)
+        ((0,0,1))
+        >>> P = Poly(-x**2, x, domain=QQ)
+        >>> NSD(P, Der(P), TaQ=UTQ)
+        ((0,0,-1))
+
     """
 
     if TaQ is None:
@@ -621,16 +685,19 @@ def NSD(Z, P, TaQ=None):
         t = TaQ(prod(P[i]**a[i] for i in range(s)), Z)
         TaQ_PA_Z.append(t)
 
+    print( TaQ_PA_Z )
+
     # print( TaQ_PA_Z )
     symb = [Symbol("".join(map(str, s))) for s in Sigma]
 
     solutions = linsolve((Matrix(Ms), Matrix(TaQ_PA_Z)), symb)
+    pretty(Ms)
+    print( solutions )
     c_SZ = next(iter(solutions))
 
     # the >= 1 should be a != 0, weird :S
     # should not be reversed
-    return tuple(map(tuple, map(reversed, itertools.compress(
-        Sigma, map(lambda x: x >= 1, c_SZ)))))
+    return tuple(map(tuple, itertools.compress(Sigma, map(lambda x: x != 0, c_SZ))))
 
 
 def BSD(Z, P, TaQ=None):
