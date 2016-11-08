@@ -292,6 +292,15 @@ def Der(P):
 
 def eps(i):
     """
+        Notation 4.26 (Reversing rows).
+
+        We denote by eps(i) the signature of the permutation reversing the
+        order of i consecutive rows in a matrix, i.e.
+        eps(i) = (-1)**(i*(i-1)/2). For every natural number i >= 1,
+
+            eps(4i) = 1, eps(4i-1) = -1, eps(4i-2) = -1, eps(4i-3) = 1.
+
+        In particular, eps(i-2j) = (-1)**j eps(i).
 
         >>> tuple(map(eps, range(1, 11)))
         (1, -1, -1, 1, 1, -1, -1, 1, 1, -1)
