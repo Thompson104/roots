@@ -392,6 +392,15 @@ Poly(-144*x**2 - 24*a, x, domain='QQ[a,b,c]'), \
 Poly(12*x**2 + 2*a, x, domain='QQ[a,b,c]'), \
 Poly(x**4 + a*x**2 + b*x + c, x, domain='QQ[a,b,c]'))
 
+        >>> f = x**4 + b * x + c
+        >>> P = Poly(f, x, domain=QQ[b, c])
+        >>> tuple(reversed(SSP(P, P.diff())))
+        (Poly(x**4 + b*x + c, x, domain='QQ[b,c]'), \
+Poly(4*x**3 + b, x, domain='QQ[b,c]'), \
+Poly(-12*b*x - 16*c, x, domain='QQ[b,c]'), \
+Poly(-36*b**2*x - 48*b*c, x, domain='QQ[b,c]'), \
+Poly(-27*b**4 + 256*c**3, x, domain='QQ[b,c]'))
+
     """
 
     # print( 'SSP' , P , Q )
