@@ -2,6 +2,8 @@
 
 import itertools
 import functools
+import operator
+from collections import Counter
 from sympy import Poly
 from sympy import Symbol
 from sympy import rem
@@ -658,21 +660,33 @@ def TMS(s):
         return T(TMS(s - 1), 3**(s - 1), 3**(s - 1), M1, 3, 3)
 
 
-def NSD(Z, P, TaQ=None):
+def NSD(Z, P, TaQ=None, mul = operator.mul ):
     """
         Algorithm 10.72 (Naive Sign Determination).
 
         >>> from sympy import Poly, QQ
         >>> from sympy.abc import x
         >>> P = Poly(x**2, x, domain=QQ)
-        >>> NSD(P, Der(P), TaQ=UTQ)
+        >>> NSD(P, Der(P), TaQ=UTQ, mul=mulmod(P))
         ((0, 0, 1),)
         >>> P = Poly(-x**2, x, domain=QQ)
-        >>> NSD(P, Der(P), TaQ=UTQ)
+        >>> NSD(P, Der(P), TaQ=UTQ, mul=mulmod(P))
         ((0, 0, -1),)
         >>> P = Poly(x**2 - 4, x, domain=QQ)
-        >>> sorted(NSD(P, Der(P), TaQ=UTQ))
+        >>> sorted(NSD(P, Der(P), TaQ=UTQ, mul=mulmod(P)))
         [(0, -1, 1), (0, 1, 1)]
+        >>> P = Poly((x - 1) * (x - 3), x, domain=QQ)
+        >>> Q = Poly((x - 5), x, domain=QQ)
+        >>> NSD(Q, Der(P), TaQ=UTQ, mul=mulmod(Q))
+        ((1, 1, 1),)
+        >>> P = Poly((x - 1) * (x - 3), x, domain=QQ)
+        >>> Q = Poly((x - 2), x, domain=QQ)
+        >>> NSD(Q, Der(P), TaQ=UTQ, mul=mulmod(Q))
+        ((-1, 0, 1),)
+        >>> P = Poly((x - 1) * (x - 3), x, domain=QQ)
+        >>> Q = Poly((x - 0), x, domain=QQ)
+        >>> NSD(Q, Der(P), TaQ=UTQ, mul=mulmod(Q))
+        ((1, -1, 1),)
 
     """
 
@@ -681,6 +695,8 @@ def NSD(Z, P, TaQ=None):
 
     if not P:
         raise Exception('P must be non-empty, got {}.'.format(P))
+
+    prod = lambda iterable : functools.reduce( mul , iterable , 1 )
 
     P = list(reversed(P))
     s = len(P)
@@ -696,7 +712,7 @@ def NSD(Z, P, TaQ=None):
     TaQ_PA_Z = []
     for a in A:
         # print(' * '.join('P[{}]^{}'.format(i,a[i]) for i in range(s)))
-        t = TaQ(prod(P[i]**a[i] for i in range(s)), Z)
+        t = TaQ(prod( P[i]**a[i] for i in range(s) ), Z)
         TaQ_PA_Z.append(t)
 
     # print( TaQ_PA_Z )
@@ -706,11 +722,13 @@ def NSD(Z, P, TaQ=None):
     # print(symb)
 
     solutions = linsolve((Matrix(Ms), Matrix(TaQ_PA_Z)), symb)
-    # print( solutions )
+    print( solutions )
     c_SZ = next(iter(solutions))
 
-    return tuple(map(tuple, itertools.compress(
-        Sigma, map(lambda x: x != 0, c_SZ))))
+    # print(c_SZ)
+    # return tuple(itertools.compress(Sigma, map(lambda x: x != 0, c_SZ)))
+    return tuple(Counter({ s : x for ( s , x ) in zip(Sigma, c_SZ)
+        }).elements())
 
 
 def BSD(Z, P, TaQ=None):
@@ -800,12 +818,18 @@ def BSD(Z, P, TaQ=None):
     return r
 
 
+def mulmod ( Q ) :
+
+    return lambda a , b : ( a * b ) % Q
+
+
 def USD(Q, P):
     """
         Algorithm 10.97 (Univariate Sign Determination).
     """
 
-    return NSD(Q, P, TaQ=UTQ)
+    return NSD(Q, P, TaQ=UTQ, mul = mulmod( Q ) )
+
 
 
 def ATE(P):
@@ -851,34 +875,60 @@ def CRRCF(P, Q):
 
         raise Exception('Q must be nonzero, got {}'.format(Q))
 
-    # should work with this simpler implementation ??
-    # a = USD( P , Der( Q ) )
-    # b = USD( Q , Der( Q ) )
-    a = USD(P, Der(P.diff()) + Der(Q))
-    b = USD(Q, Der(Q.diff()) + Der(P))
+    TA = USD( P , Der( P ) + Der( Q ) )
+    TB = USD( Q , Der( P ) + Der( Q ) )
+    ap = USD(P, Der(P))
+    aq = USD(P, Der(Q))
+    bp = USD(Q, Der(P))
+    bq = USD(Q, Der(Q))
+
+    print('encoding of P\'s roots in P' , ap)
+    print('encoding of P\'s roots in Q' , aq)
+    print('encoding of Q\'s roots in P' , bp)
+    print('encoding of Q\'s roots in Q' , bq)
+
+    A = ( ( 0 , a ) for a in TA )
+    B = ( ( 1 , b ) for b in TB )
+
+    roots = tuple( A ) + tuple( B )
 
     key = functools.cmp_to_key(PTE)
-
-    return a, b, sorted(a + b, key=key)
+    return sorted(roots, key=lambda t : key(t[1]) )
 
 
 class Interleaving (object):
 
+    """
+        Interleaving of two polynomials.
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> P = Poly((x - 1) * (x - 3), x, domain=QQ)
+        >>> Q = Poly((x - 5), x, domain=QQ)
+        >>> Interleaving(P, Q)
+        p < p < q
+        >>> P = Poly((x - 1) * (x - 3), x, domain=QQ)
+        >>> Q = Poly((x - 2), x, domain=QQ)
+        >>> Interleaving(P, Q)
+        p < q < p
+        >>> P = Poly((x - 1) * (x - 3), x, domain=QQ)
+        >>> Q = Poly((x - 0), x, domain=QQ)
+        >>> Interleaving(P, Q)
+        q < p < p
+        >>> P = Poly((x - 1) * (x - 3), x, domain=QQ)
+        >>> Q = Poly((x - 1), x, domain=QQ)
+        >>> Interleaving(P, Q)
+        p = q < p
+        >>> P = Poly((x - 1) * (x - 3), x, domain=QQ)
+        >>> Q = Poly((x - 3), x, domain=QQ)
+        >>> Interleaving(P, Q)
+        p < p = q
+
+    """
+
     def __init__(self, P, Q):
 
-        a, b, s = CRRCF(P, Q)
-        _a = frozenset(a)
-        _b = frozenset(b)
-        i = tuple(int(x in _b) for x in s)
-
-        self.P = P
-        self.Q = Q
-        self.a = a
-        self.b = b
-        self._a = _a
-        self._b = _b
-        self.s = s
-        self.i = i
+        self.roots = CRRCF(P, Q)
 
     def __repr__(self):
 
@@ -887,29 +937,22 @@ class Interleaving (object):
         e = '='
         s = ' '
 
-        x = self.i[0]
-        r = [S[x]]
+        x = self.roots[0][1]
+        r = [S[self.roots[0][0]]]
 
-        for j, x in enumerate(self.i[1:]):
+        for j, x in enumerate(self.roots[1:]):
 
-            if self.i[j] < x:
+            if PTE(self.roots[j][1],x[1]) < 0:
                 r.append(l)
             else:
                 r.append(e)
 
-            r.append(S[x])
+            r.append(S[self.roots[j+1][0]])
 
         return s.join(r)
 
 
 if __name__ == '__main__':
 
-    from sympy.abc import a, b, c, x
-
-    f = (x - 1) * (x - 3)
-    g = (x - 2)
-    P = Poly(f, x, domain=QQ)
-    Q = Poly(g, x, domain=QQ)
-    i = Interleaving(P, Q)
-
-    print(i)
+    print('Run doctests with')
+    print('$ python -m doctest [-v] thom.py')
