@@ -660,7 +660,7 @@ def TMS(s):
         return T(TMS(s - 1), 3**(s - 1), 3**(s - 1), M1, 3, 3)
 
 
-def NSD(Z, P, TaQ=None, mul = operator.mul ):
+def NSD(Z, P, TaQ=None, mul=operator.mul):
     """
         Algorithm 10.72 (Naive Sign Determination).
 
@@ -696,7 +696,7 @@ def NSD(Z, P, TaQ=None, mul = operator.mul ):
     if not P:
         raise Exception('P must be non-empty, got {}.'.format(P))
 
-    prod = lambda iterable : functools.reduce( mul , iterable , 1 )
+    prod = lambda iterable: functools.reduce(mul, iterable, 1)
 
     P = list(reversed(P))
     s = len(P)
@@ -712,7 +712,7 @@ def NSD(Z, P, TaQ=None, mul = operator.mul ):
     TaQ_PA_Z = []
     for a in A:
         # print(' * '.join('P[{}]^{}'.format(i,a[i]) for i in range(s)))
-        t = TaQ(prod( P[i]**a[i] for i in range(s) ), Z)
+        t = TaQ(prod(P[i]**a[i] for i in range(s)), Z)
         TaQ_PA_Z.append(t)
 
     # print( TaQ_PA_Z )
@@ -722,13 +722,13 @@ def NSD(Z, P, TaQ=None, mul = operator.mul ):
     # print(symb)
 
     solutions = linsolve((Matrix(Ms), Matrix(TaQ_PA_Z)), symb)
-    print( solutions )
+    print(solutions)
     c_SZ = next(iter(solutions))
 
     # print(c_SZ)
     # return tuple(itertools.compress(Sigma, map(lambda x: x != 0, c_SZ)))
-    return tuple(Counter({ s : x for ( s , x ) in zip(Sigma, c_SZ)
-        }).elements())
+    return tuple(Counter({s: x for (s, x) in zip(Sigma, c_SZ)
+                          }).elements())
 
 
 def BSD(Z, P, TaQ=None):
@@ -818,9 +818,9 @@ def BSD(Z, P, TaQ=None):
     return r
 
 
-def mulmod ( Q ) :
+def mulmod(Q):
 
-    return lambda a , b : ( a * b ) % Q
+    return lambda a, b: (a * b) % Q
 
 
 def USD(Q, P):
@@ -828,8 +828,7 @@ def USD(Q, P):
         Algorithm 10.97 (Univariate Sign Determination).
     """
 
-    return NSD(Q, P, TaQ=UTQ, mul = mulmod( Q ) )
-
+    return NSD(Q, P, TaQ=UTQ, mul=mulmod(Q))
 
 
 def ATE(P):
@@ -875,25 +874,25 @@ def CRRCF(P, Q):
 
         raise Exception('Q must be nonzero, got {}'.format(Q))
 
-    TA = USD( P , Der( P ) + Der( Q ) )
-    TB = USD( Q , Der( P ) + Der( Q ) )
+    TA = USD(P, Der(P) + Der(Q))
+    TB = USD(Q, Der(P) + Der(Q))
     ap = USD(P, Der(P))
     aq = USD(P, Der(Q))
     bp = USD(Q, Der(P))
     bq = USD(Q, Der(Q))
 
-    print('encoding of P\'s roots in P' , ap)
-    print('encoding of P\'s roots in Q' , aq)
-    print('encoding of Q\'s roots in P' , bp)
-    print('encoding of Q\'s roots in Q' , bq)
+    print('encoding of P\'s roots in P', ap)
+    print('encoding of P\'s roots in Q', aq)
+    print('encoding of Q\'s roots in P', bp)
+    print('encoding of Q\'s roots in Q', bq)
 
-    A = ( ( 0 , a ) for a in TA )
-    B = ( ( 1 , b ) for b in TB )
+    A = ((0, a) for a in TA)
+    B = ((1, b) for b in TB)
 
-    roots = tuple( A ) + tuple( B )
+    roots = tuple(A) + tuple(B)
 
     key = functools.cmp_to_key(PTE)
-    return sorted(roots, key=lambda t : key(t[1]) )
+    return sorted(roots, key=lambda t: key(t[1]))
 
 
 class Interleaving (object):
@@ -942,12 +941,12 @@ class Interleaving (object):
 
         for j, x in enumerate(self.roots[1:]):
 
-            if PTE(self.roots[j][1],x[1]) < 0:
+            if PTE(self.roots[j][1], x[1]) < 0:
                 r.append(l)
             else:
                 r.append(e)
 
-            r.append(S[self.roots[j+1][0]])
+            r.append(S[self.roots[j + 1][0]])
 
         return s.join(r)
 
