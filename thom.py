@@ -496,15 +496,15 @@ def UTQ(Q, P):
     """
         Algorithm 9.7 (Univariate Tarski-Query).
 
-        UTQ(Q,Z) = sum(Q(x) for x in Zer(P))
+        UTQ(Q,P) = sum(Q(x) for x in Zer(P))
 
         C0 = len(list(x for x in Zer(P) if Q(x) == 0))
         C- = len(list(x for x in Zer(P) if Q(x) < 0))
         C+ = len(list(x for x in Zer(P) if Q(x) > 0))
 
-        UTQ(Q,Z) = C+ - C-
-        UTQ(Q**2,Z) = C+ + C-
-        UTQ(1,Z) = C0 + C+ + C-
+        UTQ(Q,P) = C+ - C-
+        UTQ(Q**2,P) = C+ + C-
+        UTQ(1,P) = C0 + C+ + C-
 
          / 1  1  1 \   / c0 \     / UTQ( 1 , P )    \
         |  0  1 -1  | |  c+  | = |  UTQ( Q , P )     |
