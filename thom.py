@@ -146,7 +146,7 @@ def Rem(P, Q):
 
     """
 
-    return rem(P, Q, auto=False)
+    return rem(P, Q)
 
 
 def ub(P):
