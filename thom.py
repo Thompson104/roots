@@ -173,49 +173,49 @@ def lb(P):
     return -ub(P)
 
 
-def TE(s, r):
+def PTE(s, r):
     """
         Proposition 2.37 (Thom encoding).
 
-        >>> TE((0, -1, 1),(0, 1, 1))
+        >>> PTE((0, -1, 1),(0, 1, 1))
         -1
-        >>> TE((0, 1, 1),(0, -1, 1))
+        >>> PTE((0, 1, 1),(0, -1, 1))
         1
-        >>> TE((0, -1, 1),(0, -1, 1))
+        >>> PTE((0, -1, 1),(0, -1, 1))
         0
-        >>> TE((0, 1, 1),(0, 1, 1))
+        >>> PTE((0, 1, 1),(0, 1, 1))
         0
 
-        >>> TE((0,1,-1,1),(0,-1,0,1))
+        >>> PTE((0,1,-1,1),(0,-1,0,1))
         -1
-        >>> TE((0,-1,0,1),(0,1,-1,1))
+        >>> PTE((0,-1,0,1),(0,1,-1,1))
         1
-        >>> TE((0,-1,0,1),(0,1,1,1))
+        >>> PTE((0,-1,0,1),(0,1,1,1))
         -1
-        >>> TE((0,1,1,1),(0,-1,0,1))
-        1
-
-        >>> TE((0,1,-1,1),(0,-1,1,1))
-        -1
-        >>> TE((0,-1,1,1),(0,1,-1,1))
-        1
-        >>> TE((0,-1,1,1),(0,1,1,1))
-        -1
-        >>> TE((0,1,1,1),(0,-1,1,1))
+        >>> PTE((0,1,1,1),(0,-1,0,1))
         1
 
-        >>> TE((0,1,-1,1),(0,-1,-1,1))
+        >>> PTE((0,1,-1,1),(0,-1,1,1))
         -1
-        >>> TE((0,-1,-1,1),(0,1,-1,1))
+        >>> PTE((0,-1,1,1),(0,1,-1,1))
         1
-        >>> TE((0,-1,-1,1),(0,1,1,1))
+        >>> PTE((0,-1,1,1),(0,1,1,1))
         -1
-        >>> TE((0,1,1,1),(0,-1,-1,1))
+        >>> PTE((0,1,1,1),(0,-1,1,1))
         1
 
-        >>> TE((0,1,-1,1),(0,1,1,1))
+        >>> PTE((0,1,-1,1),(0,-1,-1,1))
         -1
-        >>> TE((0,1,1,1),(0,1,-1,1))
+        >>> PTE((0,-1,-1,1),(0,1,-1,1))
+        1
+        >>> PTE((0,-1,-1,1),(0,1,1,1))
+        -1
+        >>> PTE((0,1,1,1),(0,-1,-1,1))
+        1
+
+        >>> PTE((0,1,-1,1),(0,1,1,1))
+        -1
+        >>> PTE((0,1,1,1),(0,1,-1,1))
         1
 
     """
@@ -670,6 +670,9 @@ def NSD(Z, P, TaQ=None):
         >>> P = Poly(-x**2, x, domain=QQ)
         >>> NSD(P, Der(P), TaQ=UTQ)
         ((0, 0, -1),)
+        >>> P = Poly(x**2 - 4, x, domain=QQ)
+        >>> sorted(NSD(P, Der(P), TaQ=UTQ))
+        [(0, -1, 1), (0, 1, 1)]
 
     """
 
@@ -805,6 +808,36 @@ def USD(Q, P):
     return NSD(Q, P, TaQ=UTQ)
 
 
+def ATE(P):
+    """
+        Algorithm 10.100 (Thom Encoding).
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> P = Poly(x**2, x, domain=QQ)
+        >>> ATE(P)
+        ((0, 0, 1),)
+        >>> P = Poly(-x**2, x, domain=QQ)
+        >>> ATE(P)
+        ((0, 0, -1),)
+        >>> P = Poly(x**2 - 4, x, domain=QQ)
+        >>> ATE(P)
+        ((0, -1, 1), (0, 1, 1))
+
+    """
+
+    if P == 0:
+
+        raise Exception('P must be nonzero, got {}'.format(P))
+
+    # can optimize by deducing P(x) = 0 for all roots x
+    a = USD(P, Der(P))
+
+    key = functools.cmp_to_key(PTE)
+
+    return tuple(sorted(a, key=key))
+
+
 def CRRCF(P, Q):
     """
         Algorithm 10.105 (Comparison of Roots in a Real Closed Field).
@@ -824,7 +857,7 @@ def CRRCF(P, Q):
     a = USD(P, Der(P.diff()) + Der(Q))
     b = USD(Q, Der(Q.diff()) + Der(P))
 
-    key = functools.cmp_to_key(TE)
+    key = functools.cmp_to_key(PTE)
 
     return a, b, sorted(a + b, key=key)
 
