@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+    Propositions, Notations and Algorithms numbering is based on the numbering
+    from the book *Algorithms in Real Algebraic Geometry (2016)* by Basu,
+    Pollack and Roy.
+"""
+
 import itertools
 import functools
 import operator
@@ -18,6 +24,7 @@ from sympy import ZZ, QQ
 
 def pretty(M):
     """
+        Useful tool to print {0,1,-1} matrices.
 
         >>> pretty([[0,-1],[-1,1]])
          0 -1
@@ -254,32 +261,6 @@ def PTE(s, r):
             return 1 if s[d - k] < r[d - k] else -1
 
 
-# def Var ( P ) :
-
-    # if b is None :
-        # return _Var_at( P , a )
-
-    # else :
-        # return _Var_at( P , a ) - _Var_at( P , b )
-
-
-# def _Var_at ( P , a ) :
-
-    # _a = map( lambda f : f(a) , P )
-
-    # return _Var( _a )
-
-
-# def _Var ( a ) :
-
-    # b = tuple( filter( lambda x : x != 0 ) , a )
-
-    # if len( b ) < 2 :
-        # return 0
-
-    # return sum( ( i*j < 0 ) for (i,j) in zip( b[:-1] , b[1:] ) )
-
-
 def Der(P):
     """
         Returns all the derivatives of P in a tuple.
@@ -294,10 +275,6 @@ def Der(P):
     """
 
     return tuple(P.diff((0, d)) for d in range(P.degree() + 1))
-
-
-# def Zer(P):
-    # pass
 
 
 def eps(i):
@@ -324,25 +301,24 @@ def eps(i):
         return -1
 
 
-def PmV(s):
+def NGPmV(s):
     """
         Notation 4.30 (Generalized Permanences minus Variations).
 
         >>> from sympy import Poly, QQ
         >>> from sympy.abc import x
         >>> P1 = Poly( x , x , domain=QQ)
-        >>> PmV(SSC(P1, P1.diff()))
+        >>> NGPmV(SSC(P1, P1.diff()))
         1
         >>> P2 = Poly( x**2 , x , domain=QQ)
-        >>> PmV(SSC(P2, P2.diff()))
+        >>> NGPmV(SSC(P2, P2.diff()))
         1
         >>> P3 = Poly( x**3 , x , domain=QQ)
-        >>> PmV(SSC(P3, P3.diff()))
+        >>> NGPmV(SSC(P3, P3.diff()))
         1
         >>> P4 = Poly( x**2 - 1 , x , domain=QQ)
-        >>> PmV(SSC(P4, P4.diff()))
+        >>> NGPmV(SSC(P4, P4.diff()))
         2
-
 
     """
 
@@ -363,11 +339,82 @@ def PmV(s):
 
     if (p - q) % 2 == 1:
 
-        return PmV(_s) + eps(p - q) * sign(s[p] * s[q])
+        return NGPmV(_s) + eps(p - q) * sign(s[p] * s[q])
 
     else:
 
-        return PmV(_s)
+        return NGPmV(_s)
+
+
+def AGPmV(s):
+    """
+        Algorithm 9.4 (Generalized Permanences minus Variations).
+
+        =========
+        Structure
+        =========
+
+        An ordered integral domain D.
+
+        =====
+        Input
+        =====
+
+        The input s = s[0],...,s[p] is a finite list of elements in D such that
+        s[p] != 0.
+
+        ======
+        Output
+        ======
+
+        PmV(s).
+
+        ==========
+        Complexity
+        ==========
+
+        O(p).
+
+        =========
+        Procedure
+        =========
+
+        1. Initialize n to 0.
+        2. Compute the number l of non-zero elements of s and define the list
+        (s′(1), m(1)),...,(s′(l), m(l)) = (s[p],p), (s[q],q),..., of non-zero
+        elements of s with their index.
+        3. For every i from 1 to l - 1, if m(i) - m(i + 1) is odd:
+            3.1. n := n + eps(m(i)−m(i+1)) sign(s′(i) s′(i + 1)).
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> P1 = Poly( x , x , domain=QQ)
+        >>> AGPmV(SSC(P1, P1.diff()))
+        1
+        >>> P2 = Poly( x**2 , x , domain=QQ)
+        >>> AGPmV(SSC(P2, P2.diff()))
+        1
+        >>> P3 = Poly( x**3 , x , domain=QQ)
+        >>> AGPmV(SSC(P3, P3.diff()))
+        1
+        >>> P4 = Poly( x**2 - 1 , x , domain=QQ)
+        >>> AGPmV(SSC(P4, P4.diff()))
+        2
+
+    """
+
+    n = 0
+
+    sp, m = zip(*((x, i) for (i, x) in reversed(list(enumerate(s))) if x != 0))
+
+    l = len(sp)
+
+    for i in range(l - 1):
+        d = m[i] - m[i + 1]
+        if d % 2 == 1:
+            n += eps(d) * sign(sp[i] * sp[i + 1])
+
+    return n
 
 
 def SSP(P, Q):
@@ -551,9 +598,9 @@ def UTQ(Q, P):
         b0 = cof(0, Q)
 
         sRes = SSC(P, P.diff())
-        _PmV = PmV(sRes)
+        PmV = AGPmV(sRes)
 
-        return _PmV if b0 > 0 else -_PmV
+        return PmV if b0 > 0 else -PmV
 
     elif q == 1:
 
@@ -564,21 +611,21 @@ def UTQ(Q, P):
         S = (P.mul_ground(p * b1) - P.diff().mul(Q)).mul(sign(b1))
 
         sRes = SSC(P, S)
-        _PmV = PmV(sRes)
+        PmV = AGPmV(sRes)
 
-        return _PmV
+        return PmV
 
     else:
 
         sRes = SSC(-P.diff().mul(Q), P)
-        _PmV = PmV(sRes)
+        PmV = AGPmV(sRes)
 
         if (q - 1) % 2 == 1:
             bq = cof(q, Q)
-            return _PmV + sign(bq)
+            return PmV + sign(bq)
 
         else:
-            return _PmV
+            return PmV
 
 
 def A(S, T):
@@ -722,7 +769,7 @@ def NSD(Z, P, TaQ=None, mul=operator.mul):
     # print(symb)
 
     solutions = linsolve((Matrix(Ms), Matrix(TaQ_PA_Z)), symb)
-    print(solutions)
+    # print(solutions)
     c_SZ = next(iter(solutions))
 
     # print(c_SZ)
@@ -874,22 +921,24 @@ def CRRCF(P, Q):
 
         raise Exception('Q must be nonzero, got {}'.format(Q))
 
-    TA = USD(P, Der(P) + Der(Q))
-    TB = USD(Q, Der(P) + Der(Q))
+    # TA = USD(P, Der(P))
+    # TB = USD(Q, Der(P))
     ap = USD(P, Der(P))
     aq = USD(P, Der(Q))
     bp = USD(Q, Der(P))
     bq = USD(Q, Der(Q))
 
-    print('encoding of P\'s roots in P', ap)
-    print('encoding of P\'s roots in Q', aq)
-    print('encoding of Q\'s roots in P', bp)
-    print('encoding of Q\'s roots in Q', bq)
+    # print('encoding of P\'s roots in P', ap)
+    # print('encoding of P\'s roots in Q', aq)
+    # print('encoding of Q\'s roots in P', bp)
+    # print('encoding of Q\'s roots in Q', bq)
 
-    A = ((0, a) for a in TA)
-    B = ((1, b) for b in TB)
+    Ap = ((0, a) for a in ap)
+    Bp = ((1, b) for b in bp)
+    Aq = ((0, a) for a in aq)
+    Bq = ((1, b) for b in bq)
 
-    roots = tuple(A) + tuple(B)
+    roots = tuple(Ap) + tuple(Bp)
 
     key = functools.cmp_to_key(PTE)
     return sorted(roots, key=lambda t: key(t[1]))
