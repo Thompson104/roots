@@ -23,6 +23,20 @@ from sympy import ZZ, QQ
 from sympy import oo
 
 
+def Zer(P):
+    """
+        Let R be a real closed field. If P is a finite subset of R[X1,...,Xk],
+        we write the set of zeros of P in R^k as
+
+        Zer(P[,R^k]) = { x in R^k |   /\   p(x) = 0 }.
+                              p in P
+
+        These are the algebraic set of R^k = Zer({0},R^k)
+    """
+
+    pass
+
+
 def pretty(M):
     """
         Useful tool to print {0,1,-1} matrices.
