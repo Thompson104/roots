@@ -805,7 +805,7 @@ def USD(Q, P):
     return NSD(Q, P, TaQ=UTQ)
 
 
-def sort(P, Q):
+def CRRCF(P, Q):
     """
         Algorithm 10.105 (Comparison of Roots in a Real Closed Field).
     """
@@ -833,7 +833,7 @@ class Interleaving (object):
 
     def __init__(self, P, Q):
 
-        a, b, s = sort(P, Q)
+        a, b, s = CRRCF(P, Q)
         _a = frozenset(a)
         _b = frozenset(b)
         i = tuple(int(x in _b) for x in s)
