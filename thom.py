@@ -429,6 +429,83 @@ def SV(a):
     return sum(1 if i * j < 0 else 0 for (i, j) in zip(b[:-1], b[1:]))
 
 
+def PmVsResPQ(P, Q):
+    """
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> P1 = Poly( x , x , domain=QQ)
+        >>> PmVsResPQ(P1, P1.diff())
+        1
+        >>> P2 = Poly( x**2 , x , domain=QQ)
+        >>> PmVsResPQ(P2, P2.diff())
+        1
+        >>> P3 = Poly( x**3 , x , domain=QQ)
+        >>> PmVsResPQ(P3, P3.diff())
+        1
+        >>> P4 = Poly( x**2 - 1 , x , domain=QQ)
+        >>> PmVsResPQ(P4, P4.diff())
+        2
+
+    """
+
+    if Q == 0:
+        return 0
+
+    p = deg(P)
+    q = deg(Q)
+    R = Rem(P, Q)
+    r = deg(R)
+
+    PmV = PmVsResPQ(Q, -R)
+
+    if (p - q) % 2 == 1:
+        return PmV + sign(lcof(P) * lcof(Q))
+    else:
+        return PmV
+
+
+def PmVsResPQtco(P, Q):
+    """
+        Tail-call optimized version of PmVsResPQ.
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> P1 = Poly( x , x , domain=QQ)
+        >>> PmVsResPQtco(P1, P1.diff())
+        1
+        >>> P2 = Poly( x**2 , x , domain=QQ)
+        >>> PmVsResPQtco(P2, P2.diff())
+        1
+        >>> P3 = Poly( x**3 , x , domain=QQ)
+        >>> PmVsResPQtco(P3, P3.diff())
+        1
+        >>> P4 = Poly( x**2 - 1 , x , domain=QQ)
+        >>> PmVsResPQtco(P4, P4.diff())
+        2
+
+    """
+
+    PmV = 0
+
+    p = deg(P)
+    q = deg(Q)
+
+    while Q != 0:
+
+        if (p - q) % 2 == 1:
+            PmV += sign(lcof(P) * lcof(Q))
+
+            R = Rem(P, Q)
+            r = deg(R)
+
+            P = Q
+            p = q
+            Q = -R
+            q = r
+
+    return PmV
+
+
 def NGPmV(s):
     """
         Notation 4.30 (Generalized Permanences minus Variations).
