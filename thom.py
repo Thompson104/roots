@@ -1104,6 +1104,20 @@ def mulmod(Q):
 def USD(Q, P):
     """
         Algorithm 10.97 (Univariate Sign Determination).
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> P = Poly((x - 1) * (x - 3), x, domain=QQ)
+        >>> Q = Poly((x - 0), x, domain=QQ)
+        >>> sorted(USD(P, Der(P)))
+        [(0, -1, 1), (0, 1, 1)]
+        >>> sorted(USD(Q, Der(P)))
+        [(1, -1, 1)]
+        >>> sorted(USD(P, Der(Q)))
+        [(1, 1), (1, 1)]
+        >>> sorted(USD(Q, Der(Q)))
+        [(0, 1)]
+
     """
 
     return NSD(Q, P, TaQ=UTQ, mul=mulmod(Q))
@@ -1152,24 +1166,27 @@ def CRRCF(P, Q):
 
         raise Exception('Q must be nonzero, got {}'.format(Q))
 
-    # TA = USD(P, Der(P))
-    # TB = USD(Q, Der(P))
-    ap = USD(P, Der(P))
-    aq = USD(P, Der(Q))
-    bp = USD(Q, Der(P))
-    bq = USD(Q, Der(Q))
+    TA = USD(P, Der(P))
+    TB = USD(Q, Der(P))
+    # ap = USD(P, Der(P))
+    # aq = USD(P, Der(Q))
+    # bp = USD(Q, Der(P))
+    # bq = USD(Q, Der(Q))
 
     # print('encoding of P\'s roots in P', ap)
     # print('encoding of P\'s roots in Q', aq)
     # print('encoding of Q\'s roots in P', bp)
     # print('encoding of Q\'s roots in Q', bq)
 
-    Ap = ((0, a) for a in ap)
-    Bp = ((1, b) for b in bp)
-    Aq = ((0, a) for a in aq)
-    Bq = ((1, b) for b in bq)
+    # Ap = ((0, a) for a in ap)
+    # Bp = ((1, b) for b in bp)
+    # Aq = ((0, a) for a in aq)
+    # Bq = ((1, b) for b in bq)
 
-    roots = tuple(Ap) + tuple(Bp)
+    _TA = ((0, a) for a in TA)
+    _TB = ((1, b) for b in TB)
+
+    roots = tuple(_TA) + tuple(_TB)
 
     key = functools.cmp_to_key(PTE)
     return sorted(roots, key=lambda t: key(t[1]))
