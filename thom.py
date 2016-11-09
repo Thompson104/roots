@@ -504,13 +504,13 @@ def PmVsResPQtco(P, Q):
         if (p - q) % 2 == 1:
             PmV += sign(lcof(P) * lcof(Q))
 
-            R = Rem(P, Q)
-            r = deg(R)
+        R = Rem(P, Q)
+        r = deg(R)
 
-            P = Q
-            p = q
-            Q = -R
-            q = r
+        P = Q
+        p = q
+        Q = -R
+        q = r
 
     return PmV
 
@@ -833,8 +833,7 @@ def UTQ(Q, P):
 
         b0 = cof(0, Q)
 
-        sRes = SSC(P, P.diff())
-        PmV = AGPmV(sRes)
+        PmV = PmVsResPQtco(P, P.diff())
 
         return PmV if b0 > 0 else -PmV
 
@@ -846,15 +845,11 @@ def UTQ(Q, P):
         p = deg(P)
         S = (P.mul_ground(p * b1) - P.diff().mul(Q)).mul(sign(b1))
 
-        sRes = SSC(P, S)
-        PmV = AGPmV(sRes)
-
-        return PmV
+        return PmVsResPQtco(P, S)
 
     else:
 
-        sRes = SSC(-P.diff().mul(Q), P)
-        PmV = AGPmV(sRes)
+        PmV = PmVsResPQtco(-P.diff().mul(Q), P)
 
         if (q - 1) % 2 == 1:
             bq = cof(q, Q)
