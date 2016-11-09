@@ -482,6 +482,15 @@ def PmVsResPQtco(P, Q):
         >>> P4 = Poly( x**2 - 1 , x , domain=QQ)
         >>> PmVsResPQtco(P4, P4.diff())
         2
+        >>> f = 9 * x**13 - 18 * x**11 - 33 * x**10 + 102 * x**8 + 7 * x**7 \
+- 36 * x**6 - 122 * x**5 + 49 * x**4 + 93 * x**3 - 42 * x**2 - 18 * x + 9
+        >>> P = Poly(f, x, domain=QQ)
+        >>> a = NGPmV(SSC(P, P.diff()))
+        >>> b = AGPmV(SSC(P, P.diff()))
+        >>> c = PmVsResPQ(P, P.diff())
+        >>> d = PmVsResPQtco(P, P.diff())
+        >>> a == b == c == d
+        True
 
     """
 
