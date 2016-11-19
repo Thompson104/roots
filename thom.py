@@ -9,6 +9,7 @@
 import itertools
 import functools
 import operator
+import heapq
 from collections import Counter
 from sympy import Poly
 from sympy import Symbol
@@ -29,7 +30,7 @@ def Zer(P):
         we write the set of zeros of P in R^k as
 
         Zer(P[,R^k]) = { x in R^k |   /\   p(x) = 0 }.
-                              p in P
+                                    p in P
 
         These are the algebraic set of R^k = Zer({0},R^k)
     """
@@ -267,6 +268,22 @@ def PTE(s, r):
         -1
         >>> PTE((0,1,1,1),(0,1,-1,1))
         1
+        >>> PTE((0,),())
+        Traceback (most recent call last):
+         ...
+        Exception: sign conditions must have the same length
+        >>> PTE((2,),(0,))
+        Traceback (most recent call last):
+         ...
+        Exception: s=(2,) contains an intruder
+        >>> PTE((0,),(2,))
+        Traceback (most recent call last):
+         ...
+        Exception: r=(2,) contains an intruder
+        >>> PTE((1,1,1),(1,1,1))
+        Traceback (most recent call last):
+         ...
+        Exception: not roots but same sign conditions, cannot compare
 
     """
 
@@ -341,6 +358,14 @@ def eps(i):
 
         >>> tuple(map(eps, range(1, 11)))
         (1, -1, -1, 1, 1, -1, -1, 1, 1, -1)
+        >>> eps(0)
+        Traceback (most recent call last):
+            ...
+        Exception: i must be greater or equal to 1, got 0
+        >>> eps(3/2)
+        Traceback (most recent call last):
+            ...
+        Exception: i must be in ZZ, got 1.5
 
     """
 
@@ -360,21 +385,21 @@ def eps(i):
         return -1
 
 
-def SVSP(P):
-    return SVSPab(P, lb(P), ub(P))
+def SVSP(PP):
+    return SVSPab(PP, -oo, +oo)
 
 
-def SVSPab(P, a, b):
+def SVSPab(PP, a, b):
     """
         Given a and b in R U {-oo,+oo}, we denote
 
         Var(P;a,b) = Var(P;a) - Var(P;b)
     """
 
-    return SVSPa(P, a) - SVSPa(P, b)
+    return SVSPa(PP, a) - SVSPa(PP, b)
 
 
-def SVSPa(P, a):
+def SVSPa(PP, a):
     """
         Notation 2.45 (Sign variations in a sequence of polynomials at a).
 
@@ -392,7 +417,16 @@ def SVSPa(P, a):
 
     """
 
-    _a = map(lambda Pi: Pi(a), P)
+    def _eval ( P ) :
+
+        if a == -oo :
+            return P(lb(P)-1)
+        elif a == +oo :
+            return P(ub(P)+1)
+        else:
+            return P(a)
+
+    _a = map(_eval, PP)
 
     return SV(_a)
 
@@ -776,6 +810,107 @@ def SSC(P, Q):
     sRes = tuple(cof(i, sResPi) for (i, sResPi) in enumerate(sResP))
     return sRes
 
+def DSRS(P,Q) :
+    """
+        Definition 1.15 (Signed remainder sequence).
+
+        >>> from sympy.abc import a , b , c , x
+        >>> from sympy import QQ
+        >>> P = Poly(x**4 + a*x**2 + b*x + c, x, domain=QQ[a,b,c])
+        >>> P.diff()
+        Poly(4*x**3 + 2*a*x + b, x, domain='QQ[a,b,c]')
+        >>> DSRS(P,P.diff())
+        (Poly(x**4 + a*x**2 + b*x + c, x, domain='QQ[a,b,c]'), \
+Poly(4*x**3 + 2*a*x + b, x, domain='QQ[a,b,c]'), \
+Poly(-a/2*x**2 - 3*b/4*x - c, x, domain='QQ[a,b,c]'), \
+Poly((-2*a**3 + 8*a*c - 9*b**2)/a**2*x + (-a**2*b - 12*b*c)/a**2, x, domain='QQ(a,b,c)'), \
+Poly((16*a**6*c - 4*a**5*b**2 - 128*a**4*c**2 + 144*a**3*b**2*c - 27*a**2*b**4 + 256*a**2*c**3)/(16*a**6 - 128*a**4*c + 144*a**3*b**2 + 256*a**2*c**2 - 576*a*b**2*c + 324*b**4), x, domain='QQ(a,b,c)'))
+        >>> DSRS(P,0)
+        (Poly(x**4 + a*x**2 + b*x + c, x, domain='QQ[a,b,c]'),)
+        >>> DSRS(0,P)
+        (0, Poly(x**4 + a*x**2 + b*x + c, x, domain='QQ[a,b,c]'))
+        >>> DSRS(0,0)
+        Traceback (most recent call last):
+            ...
+        Exception: both polynomials 0
+
+    """
+
+    if P == Q == 0 :
+        raise Exception( 'both polynomials 0' )
+
+    if Q == 0 :
+        return (P,)
+
+    if P == 0 : # might be unnecessary to explicit this case
+        return (0,Q)
+
+    return (P,) + DSRS(Q,-Rem(P,Q))
+
+def TT(Q, P, a=-oo, b=+oo):
+    """
+       Theorem 2.73 (Tarski).
+
+                     TaQ(Q,P;a,b) = Var(sRem(P,P'Q);a,b).
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> P = Poly(2*x + 1, x, domain=QQ)
+        >>> TT(P,P)
+        0
+        >>> P = Poly(x**2 - 2*x + 1, x, domain=QQ)
+        >>> TT(P,P)
+        0
+        >>> P = Poly(x**3, x, domain=QQ)
+        >>> TT(P,P)
+        0
+        >>> Q = Poly(7, x, domain=QQ)
+        >>> TT(Q, P)
+        1
+        >>> Q = Poly(-7, x, domain=QQ)
+        >>> TT(Q, P)
+        -1
+        >>> Q = Poly(0, x, domain=QQ)
+        >>> TT(Q, P)
+        0
+
+    """
+
+    return SVSPab(DSRS(P,P.diff().mul(Q)),a,b)
+
+def TS(P,a=-oo,b=+oo):
+    """
+        Theorem 2.62 (Sturm).
+
+           # roots in interval (a,b) = TaQ(1,P;a,b) = Var(sRem(P,P');a,b).
+
+        >>> from sympy import Poly, QQ, Rational
+        >>> from sympy.abc import x
+        >>> P = Poly((x-1)*(x-3), x, domain=QQ)
+        >>> TS(P)
+        2
+        >>> TS(P,-oo,0)
+        0
+        >>> TS(P,0,2)
+        1
+        >>> TS(P,2,4)
+        1
+        >>> TS(P,4,+oo)
+        0
+        >>> P = Poly((x-7)**10, x, domain=QQ)
+        >>> TS(P)
+        1
+        >>> e = Rational(1,10**9)
+        >>> TS(P,-oo,7-e)
+        0
+        >>> TS(P,7-e,7+e)
+        1
+        >>> TS(P,7+e,+oo)
+        0
+
+    """
+
+    return TT(1,P,a,b)
 
 def UTQ(Q, P):
     """
@@ -815,6 +950,10 @@ def UTQ(Q, P):
         >>> Q = Poly(0, x, domain=QQ)
         >>> UTQ(Q, P)
         0
+        >>> UTQ(Q, 0)
+        Traceback (most recent call last):
+            ...
+        Exception: P must be nonzero, got 0
 
     """
 
@@ -824,7 +963,6 @@ def UTQ(Q, P):
 
     if Q == 0:
 
-        # raise Exception('Q must be nonzero, got {}'.format(Q))
         return 0
 
     q = deg(Q)
@@ -917,11 +1055,22 @@ def TMS(s):
          0  1  1  0  1  1  0  1  1
          0  0  0  0  1  1  0 -1 -1
          0  0  0  0  1  1  0  1  1
+        >>> TMS(0)
+        Traceback (most recent call last):
+            ...
+        Exception: s must be positive, got 0
+        >>> TMS(3/2)
+        Traceback (most recent call last):
+            ...
+        Exception: s must be in ZZ, got 1.5
 
     """
 
     if s < 1:
         raise Exception("s must be positive, got {}".format(s))
+
+    if s not in ZZ:
+        raise Exception("s must be in ZZ, got {}".format(s))
 
     M1 = (
         (1, 1, 1),
@@ -965,6 +1114,14 @@ def NSD(Z, P, TaQ=None, mul=operator.mul):
         >>> Q = Poly((x - 0), x, domain=QQ)
         >>> NSD(Q, Der(P), TaQ=UTQ, mul=mulmod(Q))
         ((1, -1, 1),)
+        >>> NSD(Q, Der(P))
+        Traceback (most recent call last):
+            ...
+        Exception: Missing Tarski-query black-box implementation
+        >>> NSD(Q, (), TaQ=UTQ)
+        Traceback (most recent call last):
+            ...
+        Exception: P must be non-empty, got ()
 
     """
 
@@ -972,7 +1129,7 @@ def NSD(Z, P, TaQ=None, mul=operator.mul):
         raise Exception('Missing Tarski-query black-box implementation')
 
     if not P:
-        raise Exception('P must be non-empty, got {}.'.format(P))
+        raise Exception('P must be non-empty, got {}'.format(P))
 
     prod = lambda iterable: functools.reduce(mul, iterable, 1)
 
@@ -983,30 +1140,17 @@ def NSD(Z, P, TaQ=None, mul=operator.mul):
     Sigma = tuple(itertools.product((0, 1, -1), repeat=s))
     A = tuple(itertools.product((0, 1, 2), repeat=s))
 
-    # pretty( Ms )
-    # print( Sigma )
-    # print( A )
-
     TaQ_PA_Z = []
     for a in A:
-        # print(' * '.join('P[{}]^{}'.format(i,a[i]) for i in range(s)))
         t = TaQ(prod(P[i]**a[i] for i in range(s)), Z)
         TaQ_PA_Z.append(t)
 
-    # print( TaQ_PA_Z )
-
-    # print( TaQ_PA_Z )
     symb = [Symbol("c_{}".format(s)) for s in Sigma]
-    # print(symb)
 
     solutions = linsolve((Matrix(Ms), Matrix(TaQ_PA_Z)), symb)
-    # print(solutions)
     c_SZ = next(iter(solutions))
 
-    # print(c_SZ)
-    # return tuple(itertools.compress(Sigma, map(lambda x: x != 0, c_SZ)))
-    return tuple(Counter({s: x for (s, x) in zip(Sigma, c_SZ)
-                          }).elements())
+    return tuple(Counter({s: x for (s, x) in zip(Sigma, c_SZ)}).elements())
 
 
 def BSD(Z, P, TaQ=None):
@@ -1120,7 +1264,7 @@ def USD(Q, P):
 
     """
 
-    return NSD(Q, P, TaQ=UTQ, mul=mulmod(Q))
+    return NSD(Q, P, TaQ=TT, mul=mulmod(Q))
 
 
 def ATE(P):
@@ -1138,6 +1282,10 @@ def ATE(P):
         >>> P = Poly(x**2 - 4, x, domain=QQ)
         >>> ATE(P)
         ((0, -1, 1), (0, 1, 1))
+        >>> ATE(0)
+        Traceback (most recent call last):
+            ...
+        Exception: P must be nonzero, got 0
 
     """
 
@@ -1156,6 +1304,22 @@ def ATE(P):
 def CRRCF(P, Q):
     """
         Algorithm 10.105 (Comparison of Roots in a Real Closed Field).
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> P = Poly((x - 1) * (x - 3), x, domain=QQ)
+        >>> Q = Poly((x - 5), x, domain=QQ)
+        >>> CRRCF(P,Q)
+        ((0, (0, -1, 1, -1, 1)), (0, (0, 1, 1, -1, 1)), (1, (1, 1, 1, 0, 1)))
+        >>> CRRCF(0,Q)
+        Traceback (most recent call last):
+            ...
+        Exception: P must be nonzero, got 0
+        >>> CRRCF(P,0)
+        Traceback (most recent call last):
+            ...
+        Exception: Q must be nonzero, got 0
+
     """
 
     if P == 0:
@@ -1166,30 +1330,32 @@ def CRRCF(P, Q):
 
         raise Exception('Q must be nonzero, got {}'.format(Q))
 
-    TA = USD(P, Der(P))
-    TB = USD(Q, Der(P))
-    # ap = USD(P, Der(P))
-    # aq = USD(P, Der(Q))
-    # bp = USD(Q, Der(P))
-    # bq = USD(Q, Der(Q))
+    def _PTE ( r , s ) :
+        try:
+            return PTE(r,s)
+        except:
+            return 0
 
-    # print('encoding of P\'s roots in P', ap)
-    # print('encoding of P\'s roots in Q', aq)
-    # print('encoding of Q\'s roots in P', bp)
-    # print('encoding of Q\'s roots in Q', bq)
+    DerP = Der(P)
+    DerQ = Der(Q)
 
-    # Ap = ((0, a) for a in ap)
-    # Bp = ((1, b) for b in bp)
-    # Aq = ((0, a) for a in aq)
-    # Bq = ((1, b) for b in bq)
-
-    _TA = ((0, a) for a in TA)
-    _TB = ((1, b) for b in TB)
-
-    roots = tuple(_TA) + tuple(_TB)
+    TPP = USD(P, DerP)
+    TPQ = USD(P, DerQ)
+    TQP = USD(Q, DerP)
+    TQQ = USD(Q, DerQ)
 
     key = functools.cmp_to_key(PTE)
-    return sorted(roots, key=lambda t: key(t[1]))
+    _key = functools.cmp_to_key(_PTE)
+
+    _TPP = sorted(TPP,key=key)
+    _TPQ = sorted(TPQ,key=_key)
+    _TQP = sorted(TQP,key=key)
+    _TQQ = sorted(TQQ,key=_key)
+
+    _TP = ((0, t+u) for t,u in zip(_TPP,_TPQ))
+    _TQ = ((1, t+u) for t,u in zip(_TQP,_TQQ))
+
+    return tuple(heapq.merge(_TP,_TQ, key=lambda t: key(t[1])))
 
 
 class Interleaving (object):
@@ -1250,5 +1416,5 @@ class Interleaving (object):
 
 if __name__ == '__main__':
 
-    print('Run doctests with')
-    print('$ python -m doctest [-v] thom.py')
+    import doctest
+    doctest.testmod()
