@@ -488,7 +488,6 @@ def PmVsResPQ(P, Q):
     p = deg(P)
     q = deg(Q)
     R = Rem(P, Q)
-    r = deg(R)
 
     PmV = PmVsResPQ(Q, -R)
 
@@ -523,6 +522,12 @@ def PmVsResPQtco(P, Q):
         >>> b = AGPmV(SSC(P, P.diff()))
         >>> c = PmVsResPQ(P, P.diff())
         >>> d = PmVsResPQtco(P, P.diff())
+        >>> a == b == c == d
+        True
+        >>> a = NGPmV(SSC(P, P.diff().diff()))
+        >>> b = AGPmV(SSC(P, P.diff().diff()))
+        >>> c = PmVsResPQ(P, P.diff().diff())
+        >>> d = PmVsResPQtco(P, P.diff().diff())
         >>> a == b == c == d
         True
 
@@ -560,7 +565,7 @@ def NGPmV(s):
 
                   / 0                                  if s' is empty,
                  |
-        PmV(s) = |  PmV(s') + eps(p-q) sign(s[p],s[q]) if p - q is odd,
+        PmV(s) = |  PmV(s') + eps(p-q) sign(s[p]*s[q]) if p - q is odd,
                  |
                   \ PmV(s')                            if p - q is even,
 
@@ -589,6 +594,10 @@ def NGPmV(s):
         >>> P4 = Poly( x**2 - 1 , x , domain=QQ)
         >>> NGPmV(SSC(P4, P4.diff()))
         2
+        >>> NGPmV((0,))
+        Traceback (most recent call last):
+            ...
+        Exception: s[p] must be nonzero, got 0
 
     """
 
@@ -719,10 +728,12 @@ Poly(4*x**3 + b, x, domain='QQ[b,c]'), \
 Poly(-12*b*x - 16*c, x, domain='QQ[b,c]'), \
 Poly(-36*b**2*x - 48*b*c, x, domain='QQ[b,c]'), \
 Poly(-27*b**4 + 256*c**3, x, domain='QQ[b,c]'))
+        >>> SSP(P,P)
+        Traceback (most recent call last):
+            ...
+        Exception: P must have strictly larger degree than Q. Got p = 4, q = 4.
 
     """
-
-    # print( 'SSP' , P , Q )
 
     p = deg(P)
     q = deg(Q)
